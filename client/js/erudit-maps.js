@@ -36,7 +36,7 @@ d3.json("stations.json", function(error, data) {
 
   // Add the container when the overlay is added to the map.
   overlay.onAdd = function() {
-    var layer = d3.select(this.getPanes().overlayLayer).append("div")
+    var layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
         .attr("class", "stations");
 
     // Draw each marker as a separate SVG element.
@@ -50,7 +50,19 @@ d3.json("stations.json", function(error, data) {
           .each(transform) // update existing markers
         .enter().append("svg")
           .each(transform)
-          .attr("class", "marker");
+          .attr("class", "marker")
+          .on("mouseover", function(d) {
+              d3.select(this).selectAll("circle").attr({
+                fill: "orange",
+                r:  9
+              });
+          })
+          .on("mouseout", function(d) {
+              d3.select(this).selectAll("circle").attr({
+                fill: "brown",
+                r:  4.5
+              });
+          });
 
       // Add a circle.
       marker.append("circle")
