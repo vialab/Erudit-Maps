@@ -1,8 +1,8 @@
 {
-    "title": "Blank Node",
-    "name": "Blank-Node",
+    "title": "Erudit Maps",
+    "name": "Erudit-Maps",
     "version": "1.0.0",
-    "description": "Blank Node JS boiler plate with gulp",
+    "description": "Entity mapping of the Erudit Corpus",
     "keywords": [
         "css",
         "sass",
@@ -14,7 +14,7 @@
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/jayrsawal/Blank-Node.git"
+        "url": "https://github.com/vialab/Erudit-Maps.git"
     },
     "dependencies": {
         "body-parser": "^1.18.2",

@@ -1,6 +1,6 @@
 version: '2'
 services:
-  pcoin:
+  erudit-maps:
     build: .
     ports:
-      - "8082:8000"
+      - "8000:8000"
