@@ -62,6 +62,9 @@ d3.json("stations.json", function(error, data) {
                 fill: "brown",
                 r:  4.5
               });
+          })
+          .on("click", function(d) {
+            pushInfoWidget(d.value);
           });
 
       // Add a circle.
@@ -70,15 +73,15 @@ d3.json("stations.json", function(error, data) {
           .attr("cx", padding)
           .attr("cy", padding);
 
-      // Add a label.
-      marker.append("text")
-          .attr("x", padding + 7)
-          .attr("y", padding)
-          .attr("dy", ".31em")
-          .text(function(d) { return d.key; });
+      // // Add a label.
+      // marker.append("text")
+      //     .attr("x", padding + 7)
+      //     .attr("y", padding)
+      //     .attr("dy", ".31em")
+      //     .text(function(d) { return d.key; });
 
       function transform(d) {
-        d = new google.maps.LatLng(d.value[1], d.value[0]);
+        d = new google.maps.LatLng(d.value["lat"], d.value["lng"]);
         d = projection.fromLatLngToDivPixel(d);
         return d3.select(this)
             .style("left", (d.x - padding) + "px")
@@ -89,4 +92,22 @@ d3.json("stations.json", function(error, data) {
 
   // Bind our overlay to the map…
   overlay.setMap(map);
+});
+
+function pushInfoWidget(values) {
+  var html = "<div class='tool-box-widget'>\
+    <span class='widget-close' onclick='$(this).parent().remove();'>x</span>" +
+    "<h2>" + values["title"] + "</h2>" +
+    "<p>Journal: " + values["journal"] + "<br/>" +
+    "Author: " + values["author"] + "<br/>" +
+    "Year: " + values["year"] + "<br/>" +
+    "Period: " + values["period"] + "</p>" +
+    "</div>";
+
+  $("#tool-box").append(html);
+}
+
+
+$(document).ready(function() {
+  $("#tool-box").width($(window).width() * 0.2);
 });
