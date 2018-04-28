@@ -4,6 +4,11 @@
   height: 100vh;
 }
 
+#map-links {
+  width: 100%;
+  height: 100%;
+}
+
 .stations {
   position: absolute;
   svg {
@@ -20,6 +25,7 @@
 }
 
 #tool-box {
+  transition: all 0.2s;
   position: absolute;
   height: 100vh;
   top: 0;
