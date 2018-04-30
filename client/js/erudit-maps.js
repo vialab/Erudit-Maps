@@ -4,8 +4,15 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   minZoom: 3,
   maxZoom: 6,
   center: new google.maps.LatLng(55, -72),
-  mapTypeId: google.maps.MapTypeId.TERRAIN
-});
+  mapTypeId: google.maps.MapTypeId.TERRAIN,
+  mapTypeControl: false,
+  scaleControl: false,
+  streetViewControl: false,
+  zoomControl: true,
+  zoomControlOptions: {
+      position: google.maps.ControlPosition.LEFT_CENTER
+  }
+  });
 
 // Load the station data. When the data comes back, create an overlay.
 d3.json("stations.json", function(error, data) {
