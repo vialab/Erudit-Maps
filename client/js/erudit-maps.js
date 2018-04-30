@@ -15,7 +15,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   });
 
 // Load the station data. When the data comes back, create an overlay.
-d3.json("stations.json", function(error, data) {
+d3.json("/entities", function(error, data) {
   if (error) throw error;
 
   var overlay = new google.maps.OverlayView();
