@@ -1,0 +1,23 @@
+{
+  "documents": {
+    "0":{
+      "lat":55
+      , "lng":-72
+      , "title":"Document A"
+      , "author":"Author X"
+      , "journal":"Documents"
+      , "year":"2018"
+      , "period":"Spring"
+    },
+    "1":{
+      "lat":50
+      , "lng":-70
+      , "title":"Document B"
+      , "author":"Author Y"
+      , "journal":"Documents"
+      , "year":"2018"
+      , "period":"Spring"
+    }
+  },
+  "links": [{"source":"0", "target": "1"},{"source":"1", "target": "0"}]
+}

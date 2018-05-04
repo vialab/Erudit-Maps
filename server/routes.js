@@ -2,6 +2,7 @@ const request = require('request');
 const bodyParser = require('body-parser');
 const variables = require('./config.js');
 const data = require('./stations.json');
+const journal_data = require('./journal.json');
 
 module.exports = app => {
 	app.use(bodyParser.json());       // to support JSON-encoded bodies
@@ -16,6 +17,10 @@ module.exports = app => {
 
 	app.get('/entities', (req, res) => {
 		res.json(data);
-	})
+	});
+
+	app.get('/journal', (req, res) => {
+		res.json(journal_data)
+	});
 
 };

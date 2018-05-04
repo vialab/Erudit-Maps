@@ -441,11 +441,6 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   height: 100vh;
 }
 
-#map-links {
-  width: 100%;
-  height: 100%;
-}
-
 .stations {
   position: absolute;
 }
@@ -499,6 +494,14 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 #tool-box .tool-box-widget h2 {
   margin: 5px 0;
   text-transform: uppercase;
+}
+
+#journal-widget #journal-list {
+  width: 100%;
+}
+
+#journal-widget div {
+  padding: 15px 0 0 0;
 }
 
 .hidden.menu {
