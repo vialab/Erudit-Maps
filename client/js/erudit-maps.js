@@ -14,6 +14,11 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 
 var map_data;
 var overlays = [];
+var colors = ["#023fa5", "#7d87b9", "#bec1d4", "#d6bcc0", "#bb7784", "#8e063b"
+  , "#4a6fe3", "#8595e1", "#b5bbe3", "#e6afb9", "#e07b91", "#d33f6a", "#11c638"
+  , "#8dd593", "#c6dec7", "#ead3c6", "#f0b98d", "#ef9708", "#0fcfc0", "#9cded6"
+  , "#d5eae7", "#f3e1eb", "#f6c4e1", "#f79cd4"];
+var color_scale = d3.scale.ordinal().range(colors);
 // d3 update map
 function update(data) {
   // Add the container when the overlay is added to the map.
@@ -42,16 +47,26 @@ function update(data) {
             return d.journalid;
           })
           .on("mouseover", function(d) {
-              d3.select(this).selectAll("circle").attr({
-                fill: "orange",
-                r:  9
-              });
+            d3.select(this).selectAll("circle")
+              .attr("r", 9)
+              .style("stroke", rgb_highlight);
+            d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
+              .selectAll("line")
+              .style("stroke", rgb_highlight);
+            d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
+              .selectAll("line")
+              .style("stroke", rgb_highlight);
           })
           .on("mouseout", function(d) {
-            d3.select(this).selectAll("circle").attr({
-              fill: "brown",
-              r:  4.5
-            });
+            d3.select(this).selectAll("circle")
+              .attr("r", 4.5)
+              .style("stroke", rgb_highlight);
+            d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
+              .selectAll("line")
+              .style("stroke", rgb_stroke);
+            d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
+              .selectAll("line")
+              .style("stroke", rgb_stroke);
           })
           .on("click", function(d) {
             if(pushInfoWidget(d)) {
@@ -63,7 +78,8 @@ function update(data) {
       marker.append("circle")
           .attr("r", 4.5)
           .attr("cx", padding)
-          .attr("cy", padding);
+          .attr("cy", padding)
+          .attr("fill", function(d) { return color_scale(d.journalid); });
 
       // draw lines between links
       var markerLink = this.layer.selectAll(".links")
@@ -126,7 +142,7 @@ function update(data) {
         // drawing the diagonal lines inside the svg elements.
         current_svg.append("svg:line")
           .style("stroke-width", 1)
-          .style("stroke", "black")
+          .style("stroke", rgb_stroke)
           .attr("x1", x1)
           .attr("y1", y1)
           .attr("x2", x2)
@@ -202,33 +218,6 @@ function hideLinks(node_id) {
   } else {
     $("svg.links[doc-source='" + node_id + "']").hide();
   }
-}
-
-// show all nodes within a journal
-function showJournalLinks(journal_id) {
-  hideLinks();
-  $("svg.marker[journal-id='" + journal_id + "']").each(function() {
-    $("svg.links[doc-source='" + $(this).attr("doc-id") + "']").each(function() {
-      showNode($(this).attr("doc-target"));
-    });
-  });
-}
-
-// show all nodes within selected set of journal
-function filterJournals() {
-  while(overlays.length > 0) {
-    overlays.pop().setMap(null);
-  }
-  var selected_journals = $("select#journal-list").val();
-  var documents = $.grep(map_data.documents, function(n, i) {
-    if($.inArray(n.journalid+"", selected_journals) > -1) {
-      return true
-    }
-    return false;
-  });
-  var new_data = {"documents":documents, "links":[]};
-  console.log(new_data);
-  update(new_data);
 }
 
 $(document).ready(function() {

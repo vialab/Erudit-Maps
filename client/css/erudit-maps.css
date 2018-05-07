@@ -453,8 +453,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 }
 
 .stations circle {
-  fill: brown;
-  stroke: black;
+  stroke: rgba(0, 0, 0, 0.5);
   stroke-width: 1.5px;
 }
 
@@ -464,7 +463,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   height: 100vh;
   top: 0;
   right: 0;
-  background-color: rgba(150, 150, 150, 0.5);
+  background-color: rgba(155, 155, 155, 0.5);
   padding: 40px 5px 10px 5px;
 }
 
@@ -502,6 +501,28 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 
 #journal-widget div {
   padding: 15px 0 0 0;
+}
+
+#filter-list ul#journal-filter {
+  padding: 0;
+}
+
+#filter-list ul#journal-filter li.filter-item {
+  position: relative;
+  list-style-type: none;
+  padding: 2px 5px;
+}
+
+#filter-list ul#journal-filter li.filter-item:hover {
+  background-color: rgba(155, 155, 155, 0.5);
+}
+
+#filter-list ul#journal-filter li.filter-item .filter-close {
+  position: absolute;
+  right: 5px;
+  top: 0;
+  color: red;
+  cursor: pointer;
 }
 
 .hidden.menu {
