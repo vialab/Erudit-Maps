@@ -26,6 +26,7 @@
   right: 0;
   background-color: $widget-bg;
   padding: 40px 5px 10px 5px;
+  overflow-y: scroll;
   .tool-box-widget {
     position: relative;
     width: auto;
@@ -67,7 +68,7 @@
     li.filter-item {
       position: relative;
       list-style-type: none;
-      padding: 2px 5px;
+      padding: 2px 5px 2px 25px;
       &:hover {
         background-color: $widget-bg;
       }
@@ -77,6 +78,14 @@
         top: 0;
         color: red;
         cursor: pointer;
+      }
+      .filter-legend {
+        width: 15px;
+        height: 15px;
+        position: absolute;
+        top: 4px;
+        left: 5px;
+        border: 1px solid $rgb-highlight;
       }
     }
   }

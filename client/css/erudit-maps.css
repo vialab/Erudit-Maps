@@ -465,6 +465,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   right: 0;
   background-color: rgba(155, 155, 155, 0.5);
   padding: 40px 5px 10px 5px;
+  overflow-y: scroll;
 }
 
 #tool-box .tool-box-widget {
@@ -510,7 +511,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 #filter-list ul#journal-filter li.filter-item {
   position: relative;
   list-style-type: none;
-  padding: 2px 5px;
+  padding: 2px 5px 2px 25px;
 }
 
 #filter-list ul#journal-filter li.filter-item:hover {
@@ -523,6 +524,15 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   top: 0;
   color: red;
   cursor: pointer;
+}
+
+#filter-list ul#journal-filter li.filter-item .filter-legend {
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .hidden.menu {

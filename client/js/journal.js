@@ -7,10 +7,8 @@ d3.json("/journal", function(error, data) {
 
 // draw the journal select list
 function drawJournalList() {
-  $("#journal-widget").remove();
-  var html = "<div id='journal-widget' class='tool-box-widget'>\
-    <h2>Journals</h2>\
-    <select id='journal-list' size='10' multiple>";
+  $("#journal-list option").remove();
+  var html = "";
 
   for(var i = 0; i < journal_data.length; i++) {
     // check if we've already selected this journal
@@ -24,11 +22,7 @@ function drawJournalList() {
       + journal_title + " (" + docs + ")</option>";
   }
 
-  html += "</select><div class='ui vertical segment right aligned'>\
-    <button onclick='filterJournals(true);'>Add Journals</button>\
-    </div></div>";
-
-  $("#tool-box").append(html);
+  $("#journal-list").append(html);
 }
 
 // write the list of selected journals to the filter list
@@ -41,8 +35,11 @@ function drawSelectedJournals() {
     }
     var data = getJournal(selected_journals[i]);
     var html = "<li class='filter-item' journal-id='"
-      + data.id + "'>" + data.title + "<span class='filter-close'\
-       onclick='removeJournalFilter(this)'>x</span></li>";
+      + data.id + "'><span class='filter-legend' \
+      style='background-color:" + color_scale(data.id)
+      + ";'></span>" + data.title + " (" + data.count + ")\
+      <span class='filter-close' \
+      onclick='removeJournalFilter(this)'>x</span></li>";
     $("ul#journal-filter").append(html);
   }
 
