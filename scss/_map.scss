@@ -1,8 +1,10 @@
 
 #map {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
 }
+
+
 
 .stations {
   position: absolute;
@@ -15,6 +17,26 @@
   circle {
     stroke: $rgb-highlight;
     stroke-width: 1.5px;
+  }
+}
+
+.SvgOverlay {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  svg {
+    position: absolute;
+    top: -4000px;
+    left: -4000px;
+    width: 8000px;
+    height: 8000px;
+  }
+
+  path {
+    stroke: Orange;
+    stroke-width: 2px;
+    fill: Orange;
+    fill-opacity: .3;
   }
 }
 

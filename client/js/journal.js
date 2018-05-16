@@ -2,7 +2,7 @@ var journal_data = {};
 var selected_journals = [];
 d3.json("/journal", function(error, data) {
   journal_data = data;
-  drawJournalList();
+  // drawJournalList();
 });
 
 // draw the journal select list
