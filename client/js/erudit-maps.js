@@ -29,6 +29,7 @@ function update(data) {
   // Add the container when the overlay is added to the map.
   var overlay = new google.maps.OverlayView();
   var polygons = [];
+  var polylines = [];
   overlay.onAdd = function() {
     this.layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
         .attr("class", "stations");
@@ -98,19 +99,34 @@ function update(data) {
       }
 
       for(var i = 0; i < data.documents.length; i++) {
-        if(data.documents[i].links.length < 3) continue;
+        if(data.documents[i].links.length == 0) continue;
         var coords = getGoogleCoords(data.documents[i].links);
-        var polygon = new google.maps.Polygon({
-          paths: coords,
-          strokeColor: '#FF0000',
-          strokeOpacity: 0.5,
-          strokeWeight: 1,
-          fillColor: '#FF0000',
-          fillOpacity: 0.3
-        });
-        polygons.push(polygon);
+        if(data.documents[i].links.length < 3) {
+          var polyline = new google.maps.Polygon({
+            path: coords,
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.5,
+            strokeWeight: 1
+          });
+          polylines.push(polyline);
+        } else {
+          var polygon = new google.maps.Polygon({
+            paths: coords,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.5,
+            strokeWeight: 1,
+            fillColor: '#FF0000',
+            fillOpacity: 0.3
+          });
+          polygons.push(polygon);
+        }
       }
 
+      // Bind polylines to the map
+      for(var i = 0; i < polygons.length; i++) {
+        polylines[i].setMap(map);
+      }
       // Bind polygons to the map
       for(var i = 0; i < polygons.length; i++) {
         polygons[i].setMap(map);
@@ -214,7 +230,9 @@ function update(data) {
 
 function getGoogleCoords(links) {
   var geo_data = [];
-  links.push(links[0]);
+  if(links.length > 1) {
+    links.push(links[0]);
+  }
   for(var i=0; i < links.length; i++) {
     if(i > 0) {
       var start_lat = node_coord[links[i-1]][0];
