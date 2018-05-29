@@ -83,7 +83,7 @@ function update(data) {
           })
           .on("click", function(d) {
             if(pushInfoWidget(d)) {
-              console.log(d);
+
             }
           });
 
@@ -309,21 +309,29 @@ function transformToGeoFeature(d) {
 
 // draw a widget box displaying info regarding a node
 function pushInfoWidget(d) {
-  if($("#winfo-" + d.documentid).length > 0) {
+  if($("#winfo-" + d.entityid).length > 0) {
     return false;
   }
-  var html = "<div class='tool-box-widget' id='winfo-" + d.documentid + "'>\
+  var html = "<div class='tool-box-widget' id='winfo-" + d.entityid + "'>\
     <span class='widget-close' onclick='$(this).parent().remove();'>x</span>" +
-    "<h2>" + d.title + "</h2>" +
-    "<p>Journal: " + d.journal + "<br/>" +
-    "Author: " + d.author + "<br/>" +
-    "Year: " + d.year + "<br/>" +
-    "Period: " + d.period + "</p>" +
+    "<h2>" + d.affiliation + "</h2>" +
+    "<p>Address: " + d.addr + "<br/>" +
+    "Lat: " + d.lat + "<br/>" +
+    "Lng: " + d.lng + "<br/>" +
     "</div>";
 
   $("#tool-box").append(html);
+  var documents = getDocumentsByEntity(d.entityid);
   openSideBar();
   return true;
+}
+
+// get all filtered documents in a specific journal
+function getDocumentsByEntity(entity_id) {
+  return $.grep(filter_data.documents, function(n, i) {
+    if(n.entityid == entity_id) return true;
+    return false;
+  });
 }
 
 // open the side bar if it is not already open
@@ -372,6 +380,7 @@ $(document).ready(function() {
   d3.json("/entities", function(error, data) {
     if (error) throw error;
     map_data = data;
+    filter_data = map_data;
     extractJournalList(map_data.documents)
     update(map_data);
     // filterJournals();
