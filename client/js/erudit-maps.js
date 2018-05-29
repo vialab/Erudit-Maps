@@ -16,6 +16,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 });
 
 var map_data;
+var filter_data;
 var overlays = [];
 var colors = ["#e07b91", "#d33f6a", "#11c638", "#8dd593", "#c6dec7", "#ead3c6"
   , "#f0b98d", "#ef9708", "#0fcfc0", "#9cded6", "#d5eae7", "#f3e1eb", "#f6c4e1"
@@ -23,13 +24,13 @@ var colors = ["#e07b91", "#d33f6a", "#11c638", "#8dd593", "#c6dec7", "#ead3c6"
   , "#4a6fe3", "#8595e1", "#b5bbe3", "#e6afb9"];
 var color_scale = d3.scale.ordinal().range(colors);
 var node_coord = {};
+var polygons = [];
+var polylines = [];
 
 // d3 update map
 function update(data) {
   // Add the container when the overlay is added to the map.
   var overlay = new google.maps.OverlayView();
-  var polygons = [];
-  var polylines = [];
   overlay.onAdd = function() {
     this.layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
         .attr("class", "stations");
@@ -92,10 +93,13 @@ function update(data) {
           .attr("cx", padding)
           .attr("cy", padding)
           .attr("fill", function(d) { return color_scale(d.entityid); });
-      var p = polygons.pop();
-      while(p) {
-        p.setMap(null);
-        p = polygons.pop();
+
+      // clear polys off map before drawing again
+      while(polygons.length > 0) {
+        polygons.pop().setMap(null);
+      }
+      while(polylines.length > 0) {
+        polylines.pop().setMap(null);
       }
 
       for(var i = 0; i < data.documents.length; i++) {
@@ -105,7 +109,7 @@ function update(data) {
           var polyline = new google.maps.Polygon({
             path: coords,
             geodesic: true,
-            strokeColor: '#FF0000',
+            strokeColor: '#008899',
             strokeOpacity: 0.5,
             strokeWeight: 1
           });
@@ -113,10 +117,10 @@ function update(data) {
         } else {
           var polygon = new google.maps.Polygon({
             paths: coords,
-            strokeColor: '#FF0000',
+            strokeColor: '#008899',
             strokeOpacity: 0.5,
             strokeWeight: 1,
-            fillColor: '#FF0000',
+            fillColor: '#008899',
             fillOpacity: 0.3
           });
           polygons.push(polygon);
@@ -124,7 +128,7 @@ function update(data) {
       }
 
       // Bind polylines to the map
-      for(var i = 0; i < polygons.length; i++) {
+      for(var i = 0; i < polylines.length; i++) {
         polylines[i].setMap(map);
       }
       // Bind polygons to the map
@@ -368,6 +372,7 @@ $(document).ready(function() {
   d3.json("/entities", function(error, data) {
     if (error) throw error;
     map_data = data;
+    extractJournalList(map_data.documents)
     update(map_data);
     // filterJournals();
   });
