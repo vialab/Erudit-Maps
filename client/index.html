@@ -41,20 +41,17 @@
     </div>
 
     <div class="pusher">
-      <!-- <div id="map">
-      </div> -->
-      <!-- SAMPLE BODY-->
+      <!-- BODY -->
       <div class="ui vertical stripe segment" id="map">
-        <div class="ui text container center">
-
-        </div>
+        <div class="ui text container center"></div>
       </div>
+      <!-- TOOL BOX -->
       <div id="tool-box">
         <div id='journal-widget' class='tool-box-widget'>
           <h2>Journals</h2>
           <select id='journal-list' size='10' multiple></select>
           <div class='ui vertical segment right aligned'>
-            <button onclick='applyFilters(true);'>Add Journals</button>
+            <button class='ui button' onclick='applyFilters(true);'>Add Journals</button>
           </div>
         </div>
         <div class='tool-box-widget' id="filter-list">
@@ -63,11 +60,29 @@
           </ul>
         </div>
       </div>
+      <!-- MODAL -->
+      <div class="ui longer modal" id="doc-modal">
+        <i class="close icon"></i>
+        <div class="header">Documents</div>
+        <div class="content">
+          <div id="no-doc">SORRY! No documents are available for viewing at this time.</div>
+          <div class="ui equal height stackable grid" id="doc-content">
+            <div class="one wide column">
+              <select id="author-list" size="10" multiple></select>
+            </div>
+            <div class="one wide column" id="doc-list">
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <div class="ui button" onclick="$(this).modal('hide');">close</div>
+        </div>
+      </div>
     </div>
     <!-- FOOTER -->
     <div class="ui inverted vertical footer segment" id="footer">
       <div class="ui container">
-        <div class="ui stackable inverted divided equal height stackable grid">
+        <div class="ui inverted divided equal height stackable grid">
           <div class="three wide column">
             <h4 class="ui inverted header">About</h4>
             <div class="ui inverted link list">

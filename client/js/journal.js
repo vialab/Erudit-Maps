@@ -1,5 +1,6 @@
 var journal = {};
 var journal_data = {};
+var author_data = {};
 var selected_journals = [];
 d3.json("/journal", function(error, data) {
   journal = data;
@@ -142,7 +143,7 @@ function clearOverlay() {
 function extractJournalList(documents) {
   var journal_list = [];
   journal_data = {};
-  for(var i=0; i < documents.length-100; i++) {
+  for(var i=0; i < documents.length; i++) {
     var journal_id = documents[i].journalid;
     if(!journal_list.includes(journal_id)) {
       journal_list.push(journal_id);
@@ -150,4 +151,21 @@ function extractJournalList(documents) {
     }
   }
   drawJournalList();
+}
+
+// get a list of authors
+function extractAuthorList(documents) {
+  var author_list = [];
+  author_data = {};
+  for(var i=0; i < documents.length-100; i++) {
+    var author_id = documents[i].authorid;
+    if(!author_list.includes(author_id)) {
+      author_list.push(author_id);
+      author_data[author_id] = {};
+      author_data[author_id].name = documents[i].author;
+      author_data[author_id].count= 1;
+    } else {
+      author_data[author_id].count++;
+    }
+  }
 }

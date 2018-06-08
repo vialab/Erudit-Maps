@@ -318,12 +318,35 @@ function pushInfoWidget(d) {
     "<p>Address: " + d.addr + "<br/>" +
     "Lat: " + d.lat + "<br/>" +
     "Lng: " + d.lng + "<br/>" +
-    "</div>";
+    "<button class='ui button' onclick='openDocumentsBar(" + d.entityid
+    + ")'>Show Documents</button></div>";
 
   $("#tool-box").append(html);
-  var documents = getDocumentsByEntity(d.entityid);
   openSideBar();
   return true;
+}
+
+// open a modal to allow viewing of documents and filtration by author
+function openDocumentsBar(entity_id) {
+  var documents = getDocumentsByEntity(entity_id);
+  $("#doc-modal").modal("show");
+  if(documents.length == 0) {
+    $("#doc-content").hide();
+    $("#no-doc").show();
+    return;
+  } else {
+    $("#no-doc").hide();
+    $("#doc-content").show();
+  }
+  var author_list = getAuthors(documents);
+  var html = "";
+  for(var i = 0; i < author_list.length; i++) {
+    var author_id = author_list[i];
+    html += "<option value='" + author_id + "'>"
+      + author_data[author_id].name +
+      " (" + author_data[author_id].count + ")</option>";
+  }
+  $("#author-list").append(html);
 }
 
 // get all filtered documents in a specific journal
@@ -332,6 +355,17 @@ function getDocumentsByEntity(entity_id) {
     if(n.entityid == entity_id) return true;
     return false;
   });
+}
+
+function getAuthors(documents) {
+  var author_list = [];
+  for(var i = 0; i < documents.length; i++) {
+    var author_id = documents[i].authorid;
+    if(!author_list.includes(author_id)) {
+      author_list.push(author_id);
+    }
+  }
+  return author_list;
 }
 
 // open the side bar if it is not already open
@@ -381,7 +415,8 @@ $(document).ready(function() {
     if (error) throw error;
     map_data = data;
     filter_data = map_data;
-    extractJournalList(map_data.documents)
+    extractJournalList(map_data.documents);
+    extractAuthorList(map_data.documents);
     update(map_data);
     // filterJournals();
   });
