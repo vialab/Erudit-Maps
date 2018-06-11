@@ -416,7 +416,8 @@ $(document).ready(function() {
     map_data = data;
     filter_data = map_data;
     extractJournalList(map_data.documents);
-    extractAuthorList(map_data.documents);
+    author_data = extractAuthorList(map_data.documents);
+    drawAuthorList();
     update(map_data);
     // filterJournals();
   });

@@ -2,6 +2,7 @@ var journal = {};
 var journal_data = {};
 var author_data = {};
 var selected_journals = [];
+var selected_authors = [];
 d3.json("/journal", function(error, data) {
   journal = data;
   // drawJournalList();
@@ -92,6 +93,35 @@ function removeJournalFilter(elem) {
 }
 
 // show all nodes within selected set of journal
+function filterAuthors(data, queued) {
+  // filter map_data with docs just in our selected journals
+  selected_authors = selected_authors.concat($("select#author-list").val());
+  var entity_list = [];
+  var documents = $.grep(data.documents, function(n, i) {
+    if($.inArray(n.journalid+"", selected_journals) > -1) {
+      if($.inArray(n.entityid+"", entity_list) == -1) {
+        entity_list.push(n.entityid);
+      }
+      return true
+    }
+    return false;
+  });
+  // filter links such that both documents are in selected journals
+  var entities = {};
+  for(var id in entity_list) {
+    entities[entity_list[id]] = data.entities[entity_list[id]];
+  }
+  var new_data = {"documents":documents, "entities":entities};
+  // remove selected journals from our select list
+  for(var i=0; i<selected_authors.length; i++) {
+    $("#author-list option[value='" + selected_authors[i] + "']").remove();
+  }
+
+  if(queued) return new_data; // filter only and apply filters externally
+  update(new_data); // update the database
+}
+
+// show all nodes within selected set of journal
 function filterJournals(data, queued) {
   // filter map_data with docs just in our selected journals
   selected_journals = selected_journals.concat($("select#journal-list").val());
@@ -126,6 +156,11 @@ function applyFilters(update_journals) {
   // start by filtering by journal
   filter_data = filterJournals(map_data, true);
   drawJournalList();
+  // then filter our author filter
+  filter_data = filterAuthors(filter_data, true);
+  var documents = filter_data.documents ? filter_data.documents : [];
+  author_data = extractAuthorList(documents);
+  drawAuthorList();
   // draw our list of labels
   if(update_journals) drawSelectedJournals();
   // update our vis
@@ -156,16 +191,35 @@ function extractJournalList(documents) {
 // get a list of authors
 function extractAuthorList(documents) {
   var author_list = [];
-  author_data = {};
-  for(var i=0; i < documents.length-100; i++) {
+  var authors = {};
+  for(var i=0; i < documents.length; i++) {
     var author_id = documents[i].authorid;
     if(!author_list.includes(author_id)) {
       author_list.push(author_id);
-      author_data[author_id] = {};
-      author_data[author_id].name = documents[i].author;
-      author_data[author_id].count= 1;
+      authors[author_id] = {};
+      authors[author_id].name = documents[i].author;
+      authors[author_id].count = 1;
     } else {
-      author_data[author_id].count++;
+      authors[author_id].count += 1;
     }
   }
+  return authors;
+}
+
+// draw a list of authors for use in filtering
+function drawAuthorList() {
+  $("#author-list option").remove();
+  var html = "";
+  for(var key in author_data) {
+    // check if we've already selected this author
+    if($.inArray(key+"", selected_authors) > -1) {
+      continue;
+    }
+    var j = author_data[key];
+    var docs = j.count ? j.count : 0;
+    html += "<option value='" + key + "'>"
+      + j.name + " (" + docs + ")</option>";
+  }
+
+  $("#author-list").append(html);
 }

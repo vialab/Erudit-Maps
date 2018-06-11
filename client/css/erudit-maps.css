@@ -517,11 +517,11 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   text-transform: uppercase;
 }
 
-#journal-widget #journal-list {
+.filter-widget .list {
   width: 100%;
 }
 
-#journal-widget div {
+.filter-widget div {
   padding: 15px 0 0 0;
 }
 

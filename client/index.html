@@ -47,11 +47,18 @@
       </div>
       <!-- TOOL BOX -->
       <div id="tool-box">
-        <div id='journal-widget' class='tool-box-widget'>
+        <div id='journal-widget' class='tool-box-widget filter-widget'>
           <h2>Journals</h2>
-          <select id='journal-list' size='10' multiple></select>
+          <select class="list" id='journal-list' size='10' multiple></select>
           <div class='ui vertical segment right aligned'>
-            <button class='ui button' onclick='applyFilters(true);'>Add Journals</button>
+            <button class='ui button' onclick='applyFilters(true);'>Select Journals</button>
+          </div>
+        </div>
+        <div id='author-widget' class='tool-box-widget filter-widget'>
+          <h2>Authors</h2>
+          <select class="list" id='author-list' size='10' multiple></select>
+          <div class='ui vertical segment right aligned'>
+            <button class='ui button' onclick='applyFilters(true);'>Select Authors</button>
           </div>
         </div>
         <div class='tool-box-widget' id="filter-list">
