@@ -113,6 +113,12 @@
   }
 }
 
+#doc-list {
+  width: 100%;
+  height: 500px;
+  overflow-y: scroll;
+}
+
 .hidden.menu {
   display: none;
 }

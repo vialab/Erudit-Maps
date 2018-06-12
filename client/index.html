@@ -33,6 +33,7 @@
       <div class="ui container">
         <a href="#page-top" class="header item js-scroll-trigger">Erudit Maps</a>
         <div class="right menu">
+          <a class="item" onclick="openFilterModal();">Filters</a>
           <a class="item" onclick="toggleSideBar();">Toggle Side Bar</a>
           <!-- <a href="http://vialab.ca" class="item js-scroll-trigger">Vialab</a>
           <a href="https://github.com/vialab/Erudit-Maps" class="item js-scroll-trigger">GitHub</a> -->
@@ -47,37 +48,57 @@
       </div>
       <!-- TOOL BOX -->
       <div id="tool-box">
-        <div id='journal-widget' class='tool-box-widget filter-widget'>
-          <h2>Journals</h2>
-          <select class="list" id='journal-list' size='10' multiple></select>
-          <div class='ui vertical segment right aligned'>
-            <button class='ui button' onclick='applyFilters(true);'>Select Journals</button>
-          </div>
-        </div>
-        <div id='author-widget' class='tool-box-widget filter-widget'>
-          <h2>Authors</h2>
-          <select class="list" id='author-list' size='10' multiple></select>
-          <div class='ui vertical segment right aligned'>
-            <button class='ui button' onclick='applyFilters(true);'>Select Authors</button>
-          </div>
-        </div>
-        <div class='tool-box-widget' id="filter-list">
+        <!-- <div class='tool-box-widget' id="filter-list">
           <h2>Selected Journals</h2>
           <ul id="journal-filter">
           </ul>
-        </div>
+        </div> -->
       </div>
       <!-- MODAL -->
+      <div class="ui longer modal" id="filter-modal">
+        <i class="close icon"></i>
+        <div class="header">Filters</div>
+        <div class="content">
+          <div class="ui horizontal segments piled">
+            <div class="ui segment">
+              <div id='journal-widget'>
+                <h2>Journals</h2>
+                <select class="list" id='journal-list' size='10' multiple></select>
+                <div class='ui vertical segment'>
+                  <button class='ui button' onclick='applyFilters(true);'>Select Journals</button>
+                </div>
+              </div>
+              <div id='author-widget'>
+                <h2>Authors</h2>
+                <select class="list" id='author-list' size='10' multiple></select>
+                <div class='ui vertical segment'>
+                  <button class='ui button' onclick='applyFilters(true);'>Select Authors</button>
+                </div>
+              </div>
+            </div>
+            <div class="ui segment">
+              <div class='tool-box-widget' id="filter-list">
+                <h2>Selected Journals</h2>
+                <ul id="journal-filter">
+                </ul>
+                <h2>Selected Authors</h2>
+                <ul id="author-filter">
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <div class="ui button" onclick="$(this).modal('hide');">close</div>
+        </div>
+      </div>
       <div class="ui longer modal" id="doc-modal">
         <i class="close icon"></i>
-        <div class="header">Documents</div>
+        <div class="header"></div>
         <div class="content">
           <div id="no-doc">SORRY! No documents are available for viewing at this time.</div>
           <div class="ui equal height stackable grid" id="doc-content">
-            <div class="one wide column">
-              <select id="author-list" size="10" multiple></select>
-            </div>
-            <div class="one wide column" id="doc-list">
+            <div id="doc-list">
             </div>
           </div>
         </div>

@@ -319,7 +319,7 @@ function pushInfoWidget(d) {
     "Lat: " + d.lat + "<br/>" +
     "Lng: " + d.lng + "<br/>" +
     "<button class='ui button' onclick='openDocumentsBar(" + d.entityid
-    + ")'>Show Documents</button></div>";
+    + ",\"" + d.affiliation + "\")'>View Documents</button></div>";
 
   $("#tool-box").append(html);
   openSideBar();
@@ -327,9 +327,10 @@ function pushInfoWidget(d) {
 }
 
 // open a modal to allow viewing of documents and filtration by author
-function openDocumentsBar(entity_id) {
+function openDocumentsBar(entity_id, affiliation) {
   var documents = getDocumentsByEntity(entity_id);
   $("#doc-modal").modal("show");
+  $("#doc-modal .header").html(affiliation);
   if(documents.length == 0) {
     $("#doc-content").hide();
     $("#no-doc").show();
@@ -338,15 +339,19 @@ function openDocumentsBar(entity_id) {
     $("#no-doc").hide();
     $("#doc-content").show();
   }
-  var author_list = getAuthors(documents);
   var html = "";
-  for(var i = 0; i < author_list.length; i++) {
-    var author_id = author_list[i];
-    html += "<option value='" + author_id + "'>"
-      + author_data[author_id].name +
-      " (" + author_data[author_id].count + ")</option>";
+  for(var i = 0; i < documents.length; i++) {
+    html += "<div class='ui vertical segment doc-info'><h4>" + documents[i].title + "</h4>"
+      + "Author: " + documents[i].author + "<br/>"
+      + "Journal: " + documents[i].journal + "<br/>"
+      + "Year: " + documents[i].year + "</div><br/>";
   }
-  $("#author-list").append(html);
+  $("#doc-list").append(html);
+}
+
+// open filter MODAL
+function openFilterModal() {
+  $("#filter-modal").modal("show");
 }
 
 // get all filtered documents in a specific journal
@@ -419,6 +424,7 @@ $(document).ready(function() {
     author_data = extractAuthorList(map_data.documents);
     drawAuthorList();
     update(map_data);
+    closeSideBar();
     // filterJournals();
   });
 });
