@@ -525,21 +525,21 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   padding: 15px 0 0 0;
 }
 
-#filter-list ul#journal-filter {
+#filter-list ul#journal-filter, #filter-list ul#author-filter {
   padding: 0;
 }
 
-#filter-list ul#journal-filter li.filter-item {
+#filter-list ul#journal-filter li.filter-item, #filter-list ul#author-filter li.filter-item {
   position: relative;
   list-style-type: none;
   padding: 2px 5px 2px 25px;
 }
 
-#filter-list ul#journal-filter li.filter-item:hover {
+#filter-list ul#journal-filter li.filter-item:hover, #filter-list ul#author-filter li.filter-item:hover {
   background-color: rgba(155, 155, 155, 0.5);
 }
 
-#filter-list ul#journal-filter li.filter-item .filter-close {
+#filter-list ul#journal-filter li.filter-item .filter-close, #filter-list ul#author-filter li.filter-item .filter-close {
   position: absolute;
   right: 5px;
   top: 0;
@@ -547,7 +547,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   cursor: pointer;
 }
 
-#filter-list ul#journal-filter li.filter-item .filter-legend {
+#filter-list ul#journal-filter li.filter-item .filter-legend, #filter-list ul#author-filter li.filter-item .filter-legend {
   width: 15px;
   height: 15px;
   position: absolute;

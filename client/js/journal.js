@@ -43,40 +43,44 @@ function drawSelectedJournals() {
       onclick='removeJournalFilter(this)'>x</span></li>";
     $("ul#journal-filter").append(html);
   }
+  highlightJournal();
+}
 
-  $(".filter-item").on("mouseover", function() {
-    var journal_id = $(this).attr("journal-id");
-    var svg = d3.selectAll("svg[journal-id='" + journal_id + "']");
-    svg.selectAll("circle").style("stroke", rgb_highlight)
-      .style("z-index", 999);
-    svg.each(function(d) {
-      d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
-        .selectAll("line")
-        .style("stroke", rgb_highlight)
+// perform some sort of visual feedback on journal identities
+function highlightJournal() {
+    $(".filter-item").on("mouseover", function() {
+      var journal_id = $(this).attr("journal-id");
+      var svg = d3.selectAll("svg[journal-id='" + journal_id + "']");
+      svg.selectAll("circle").style("stroke", rgb_highlight)
         .style("z-index", 999);
-      d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
-        .selectAll("line")
-        .style("stroke", rgb_highlight)
-        .style("z-index", 999);
+      svg.each(function(d) {
+        d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
+          .selectAll("line")
+          .style("stroke", rgb_highlight)
+          .style("z-index", 999);
+        d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
+          .selectAll("line")
+          .style("stroke", rgb_highlight)
+          .style("z-index", 999);
+      });
     });
-  });
 
-  $(".filter-item").on("mouseout", function() {
-    var journal_id = $(this).attr("journal-id");
-    var svg = d3.selectAll("svg[journal-id='" + journal_id + "']");
-    svg.selectAll("circle").style("stroke", rgb_highlight)
-      .style("z-index", "auto");
-    svg.each(function(d) {
-      d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
-        .selectAll("line")
-        .style("stroke", rgb_stroke)
+    $(".filter-item").on("mouseout", function() {
+      var journal_id = $(this).attr("journal-id");
+      var svg = d3.selectAll("svg[journal-id='" + journal_id + "']");
+      svg.selectAll("circle").style("stroke", rgb_highlight)
         .style("z-index", "auto");
-      d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
-        .selectAll("line")
-        .style("stroke", rgb_stroke)
-        .style("z-index", "auto");
+      svg.each(function(d) {
+        d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
+          .selectAll("line")
+          .style("stroke", rgb_stroke)
+          .style("z-index", "auto");
+        d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
+          .selectAll("line")
+          .style("stroke", rgb_stroke)
+          .style("z-index", "auto");
+      });
     });
-  });
 }
 
 // remove from selected journal list
@@ -93,38 +97,10 @@ function removeJournalFilter(elem) {
 }
 
 // show all nodes within selected set of journal
-function filterAuthors(data, queued) {
-  // filter map_data with docs just in our selected journals
-  selected_authors = selected_authors.concat($("select#author-list").val());
-  var entity_list = [];
-  var documents = $.grep(data.documents, function(n, i) {
-    if($.inArray(n.journalid+"", selected_journals) > -1) {
-      if($.inArray(n.entityid+"", entity_list) == -1) {
-        entity_list.push(n.entityid);
-      }
-      return true
-    }
-    return false;
-  });
-  // filter links such that both documents are in selected journals
-  var entities = {};
-  for(var id in entity_list) {
-    entities[entity_list[id]] = data.entities[entity_list[id]];
-  }
-  var new_data = {"documents":documents, "entities":entities};
-  // remove selected journals from our select list
-  for(var i=0; i<selected_authors.length; i++) {
-    $("#author-list option[value='" + selected_authors[i] + "']").remove();
-  }
-
-  if(queued) return new_data; // filter only and apply filters externally
-  update(new_data); // update the database
-}
-
-// show all nodes within selected set of journal
 function filterJournals(data, queued) {
   // filter map_data with docs just in our selected journals
   selected_journals = selected_journals.concat($("select#journal-list").val());
+  if(selected_journals.length == 0) return data;
   var entity_list = [];
   var documents = $.grep(data.documents, function(n, i) {
     if($.inArray(n.journalid+"", selected_journals) > -1) {
@@ -151,7 +127,7 @@ function filterJournals(data, queued) {
 }
 
 // apply all filters all at once
-function applyFilters(update_journals) {
+function applyFilters(update_selected) {
   clearOverlay();
   // start by filtering by journal
   filter_data = filterJournals(map_data, true);
@@ -162,7 +138,10 @@ function applyFilters(update_journals) {
   author_data = extractAuthorList(documents);
   drawAuthorList();
   // draw our list of labels
-  if(update_journals) drawSelectedJournals();
+  if(update_selected) {
+    drawSelectedJournals();
+    drawSelectedAuthors();
+  }
   // update our vis
   update(filter_data);
 }
@@ -186,6 +165,90 @@ function extractJournalList(documents) {
     }
   }
   drawJournalList();
+}
+
+// remove from selected journal list
+function removeAuthorFilter(elem) {
+  var $parent = $(elem).parent();
+  var author_id = $parent.attr("author-id");
+  $parent.remove();
+
+  selected_authors = selected_authors.filter(function(item) {
+    return item != author_id;
+  });
+
+  applyFilters(true);
+}
+
+// show all nodes within selected set of journal
+function filterAuthors(data, queued) {
+  // filter map_data with docs just in our selected journals
+  selected_authors = selected_authors.concat($("select#author-list").val());
+  if(selected_authors.length == 0) {
+    return data;
+  }
+  var entity_list = [];
+  var documents = $.grep(data.documents, function(n, i) {
+    if($.inArray(n.authorid+"", selected_authors) > -1) {
+      if($.inArray(n.entityid+"", entity_list) == -1) {
+        entity_list.push(n.entityid);
+      }
+      return true
+    }
+    return false;
+  });
+  // filter links such that both documents are in selected journals
+  var entities = {};
+  for(var id in entity_list) {
+    entities[entity_list[id]] = data.entities[entity_list[id]];
+  }
+  var new_data = {"documents":documents, "entities":entities};
+  // remove selected journals from our select list
+  for(var i=0; i<selected_authors.length; i++) {
+    $("#author-list option[value='" + selected_authors[i] + "']").remove();
+  }
+
+  if(queued) return new_data; // filter only and apply filters externally
+  update(new_data); // update the database
+}
+
+// write the list of selected journals to the filter list
+function drawSelectedJournals() {
+  for(var i=0; i<selected_journals.length; i++) {
+    if($("#journal-filter li[journal-id='"
+        + selected_journals[i] + "']").length > 0) {
+      continue;
+    }
+    var id = selected_journals[i];
+    var data = journal[selected_journals[i]];
+    var html = "<li class='filter-item' journal-id='"
+      + id + "'><span class='filter-legend' \
+      style='background-color:" + color_scale(id)
+      + ";'></span>" + data.title + " (" + data.count + ")\
+      <span class='filter-close' \
+      onclick='removeJournalFilter(this)'>x</span></li>";
+    $("ul#journal-filter").append(html);
+  }
+  highlightJournal();
+}
+
+// write the list of selected journals to the filter list
+function drawSelectedAuthors() {
+  for(var i=0; i<selected_authors.length; i++) {
+    if($("#author-filter li[author-id='"
+        + selected_authors[i] + "']").length > 0) {
+      continue;
+    }
+    var id = selected_authors[i];
+    var data = author_data[selected_authors[i]];
+    var html = "<li class='filter-item' author-id='"
+      + id + "'><span class='filter-legend' \
+      style='background-color:" + color_scale(id)
+      + ";'></span>" + data.name + " (" + data.count + ")\
+      <span class='filter-close' \
+      onclick='removeAuthorFilter(this)'>x</span></li>";
+    $("ul#author-filter").append(html);
+  }
 }
 
 // get a list of authors

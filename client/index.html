@@ -59,16 +59,16 @@
         <i class="close icon"></i>
         <div class="header">Filters</div>
         <div class="content">
-          <div class="ui horizontal segments piled">
+          <div id="filter-body" class="ui horizontal segments piled">
             <div class="ui segment">
-              <div id='journal-widget'>
+              <div class="filter-widget" id='journal-widget'>
                 <h2>Journals</h2>
                 <select class="list" id='journal-list' size='10' multiple></select>
                 <div class='ui vertical segment'>
                   <button class='ui button' onclick='applyFilters(true);'>Select Journals</button>
                 </div>
               </div>
-              <div id='author-widget'>
+              <div class="filter-widget" id='author-widget'>
                 <h2>Authors</h2>
                 <select class="list" id='author-list' size='10' multiple></select>
                 <div class='ui vertical segment'>
