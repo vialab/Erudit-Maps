@@ -105,7 +105,6 @@ function filterJournals(data, queued) {
   var documents = $.grep(data.documents, function(n, i) {
     if($.inArray(n.journalid+"", selected_journals) > -1) {
       if($.inArray(n.entityid+"", entity_list) == -1) {
-        console.log(n);
         entity_list.push(n.entityid);
       }
       return true
@@ -132,7 +131,6 @@ function applyFilters(update_selected) {
   clearOverlay();
   // start by filtering by journal
   filter_data = filterJournals(map_data, true);
-  console.log(filter_data);
   drawJournalList();
   // then filter our author filter
   filter_data = filterAuthors(filter_data, true);
