@@ -103,7 +103,7 @@ function update(data) {
       }
 
       for(var i = 0; i < data.documents.length; i++) {
-        if(data.documents[i].links.length == 0) continue;
+        if(data.documents[i].links.length < 2) continue;
         var coords = getGoogleCoords(data.documents[i].links);
         if(data.documents[i].links.length < 3) {
           var polyline = new google.maps.Polygon({
@@ -162,6 +162,9 @@ function update(data) {
 
       // transform d by projecting lat and lng values to x y coords
       function transform(d) {
+        if(typeof(d.entityid)=="undefined") {
+          console.log(d);
+        }
         node_coord[d.entityid] = [d.lat, d.lng];
         d = new google.maps.LatLng(d.lat, d.lng);
         d = projection.fromLatLngToDivPixel(d);
@@ -356,6 +359,8 @@ function openFilterModal() {
 
 // get all filtered documents in a specific journal
 function getDocumentsByEntity(entity_id) {
+  console.log(entity_id);
+  console.log(filter_data);
   return $.grep(filter_data.documents, function(n, i) {
     if(n.entityid == entity_id) return true;
     return false;
