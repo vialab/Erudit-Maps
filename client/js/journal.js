@@ -100,7 +100,14 @@ function removeJournalFilter(elem) {
 function filterJournals(data, queued) {
   // filter map_data with docs just in our selected journals
   selected_journals = selected_journals.concat($("select#journal-list").val());
-  if(selected_journals.length == 0) return data;
+  if(selected_journals.length == 0) {
+    $("#journal-filter i").show();
+    $("#filter-list h2.journal").html("Selected Journals");
+    return data;
+  } else {
+    $("#journal-filter i").hide();
+    $("#filter-list h2.journal").html("Selected Journals (" + selected_journals.length + ")");
+  }
   var entity_list = [];
   var documents = $.grep(data.documents, function(n, i) {
     if($.inArray(n.journalid+"", selected_journals) > -1) {
@@ -185,7 +192,12 @@ function filterAuthors(data, queued) {
   // filter map_data with docs just in our selected journals
   selected_authors = selected_authors.concat($("select#author-list").val());
   if(selected_authors.length == 0) {
+    $("#author-filter i").show();
+    $("#filter-list h2.author").html("Selected Authors");
     return data;
+  } else {
+    $("#author-filter i").hide();
+    $("#filter-list h2.author").html("Selected Authors (" + selected_authors.length + ")");
   }
   var entity_list = [];
   var documents = $.grep(data.documents, function(n, i) {

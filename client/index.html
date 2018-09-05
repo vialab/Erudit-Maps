@@ -29,69 +29,24 @@
   <body class="pushable" id="page-top">
 
     <!-- Navigation -->
-    <div class="ui fixed inverted menu">
+    <!--<div class="ui fixed inverted menu">
       <div class="ui container">
         <a href="#page-top" class="header item js-scroll-trigger">Erudit Maps</a>
         <div class="right menu">
           <a class="item" onclick="openFilterModal();">Filters</a>
           <a class="item" onclick="toggleSideBar();">Toggle Side Bar</a>
           <!-- <a href="http://vialab.ca" class="item js-scroll-trigger">Vialab</a>
-          <a href="https://github.com/vialab/Erudit-Maps" class="item js-scroll-trigger">GitHub</a> -->
+          <a href="https://github.com/vialab/Erudit-Maps" class="item js-scroll-trigger">GitHub</a>
         </div>
       </div>
-    </div>
+    </div>-->
 
     <div class="pusher">
       <!-- BODY -->
       <div class="ui vertical stripe segment" id="map">
         <div class="ui text container center"></div>
       </div>
-      <!-- TOOL BOX -->
-      <div id="tool-box">
-        <!-- <div class='tool-box-widget' id="filter-list">
-          <h2>Selected Journals</h2>
-          <ul id="journal-filter">
-          </ul>
-        </div> -->
-      </div>
-      <!-- MODAL -->
-      <div class="ui longer modal" id="filter-modal">
-        <i class="close icon"></i>
-        <div class="header">Filters</div>
-        <div class="content">
-          <div id="filter-body" class="ui horizontal segments piled">
-            <div class="ui segment">
-              <div class="filter-widget" id='journal-widget'>
-                <h2>Journals</h2>
-                <select class="list" id='journal-list' size='10' multiple></select>
-                <div class='ui vertical segment'>
-                  <button class='ui button' onclick='applyFilters(true);'>Select Journals</button>
-                </div>
-              </div>
-              <div class="filter-widget" id='author-widget'>
-                <h2>Authors</h2>
-                <select class="list" id='author-list' size='10' multiple></select>
-                <div class='ui vertical segment'>
-                  <button class='ui button' onclick='applyFilters(true);'>Select Authors</button>
-                </div>
-              </div>
-            </div>
-            <div class="ui segment">
-              <div class='tool-box-widget' id="filter-list">
-                <h2>Selected Journals</h2>
-                <ul id="journal-filter">
-                </ul>
-                <h2>Selected Authors</h2>
-                <ul id="author-filter">
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="actions">
-          <div class="ui button" onclick="$(this).modal('hide');">close</div>
-        </div>
-      </div>
+
       <div class="ui longer modal" id="doc-modal">
         <i class="close icon"></i>
         <div class="header"></div>
@@ -104,6 +59,52 @@
         </div>
         <div class="actions">
           <div class="ui button" onclick="$(this).modal('hide');">close</div>
+        </div>
+      </div>
+      <div class="ui cards transition" id="widget-cards">
+        <div class="shadow card transition" id="selected-filters">
+          <div class="content transition overflow">
+            <div class='tool-box-widget' id="filter-list">
+              <h2 class="journal">Selected Journals</h2>
+              <ul id="journal-filter">
+                <i>None selected</i>
+              </ul>
+              <h2 class="author">Selected Authors</h2>
+              <ul id="author-filter">
+                <i>None Selected</i>
+              </ul>
+            </div>
+          </div>
+          <div class="extra content transition" onclick="toggleFilterBar();">
+            Show more filters +
+          </div>
+        </div>
+        <div class="shadow card filter-widget transition" style="display: none;">
+          <div class="content">
+            <div id='journal-widget'>
+              <h2>Journals</h2>
+              <select class="list" id='journal-list' size='10' multiple></select>
+            </div>
+          </div>
+          <div class="extra content" onclick='applyFilters(true);'>
+            Select Journals
+          </div>
+        </div>
+        <div class="shadow card transition filter-widget" style="display: none;">
+          <div class="content">
+            <div id='author-widget'>
+              <h2>Authors</h2>
+              <select class="list" id='author-list' size='10' multiple></select>
+            </div>
+          </div>
+          <div class="extra content" onclick='applyFilters(true);'>
+            Select Authors
+          </div>
+        </div>
+        <div class="card transition" id="close-card" onclick="toggleFilterBar();" style="display:none">
+          <div class="content">
+            Show less -
+          </div>
         </div>
       </div>
     </div>
@@ -144,7 +145,7 @@
     <!-- Custom scripts for this template -->
     <script src="js/variables.min.js"></script>
     <script src="js/main.min.js"></script>
-    <script src="//maps.google.com/maps/api/js?sensor=true"></script>
+    <script src="//maps.google.com/maps/api/js?key=AIzaSyCqdIacUciZPQcOmfNAuaqsH17wDLj8wD8"></script>
     <script src="https://d3js.org/d3.v3.js"></script>
     <script src="js/journal.min.js"></script>
     <script src="js/erudit-maps.js"></script>

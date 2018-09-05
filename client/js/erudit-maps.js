@@ -10,9 +10,9 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   streetViewControl: false,
   zoomControl: true,
   zoomControlOptions: {
-      position: google.maps.ControlPosition.LEFT_CENTER
-  },
-  styles:[{"stylers": [{"saturation": -50},{"lightness": 50}]}]
+      position: google.maps.ControlPosition.RIGHT_CENTER
+  }
+  // ,styles:[{"stylers": [{"saturation": -50},{"lightness": 50}]}]
 });
 
 var map_data;
@@ -396,6 +396,38 @@ function toggleSideBar() {
     $("#tool-box").css("right", 0);
   } else {
     $("#tool-box").css("right", -$("#tool-box").width()-15);
+  }
+}
+
+function openFilterBar() {
+  $("#selected-filters .extra.content").hide();
+  $("#widget-cards #close-card").show();
+  $("#widget-cards").css("background-color", "#eee");
+  $("#widget-cards").css("pointer-events", "auto");
+  $("#widget-cards").css("overflow-y", "scroll");
+  $("#widget-cards").addClass("opened");
+  $("#widget-cards").addClass("shadow");
+  $(".filter-widget").show();
+  $("#selected-filters").css("max-height", "none");
+}
+
+function closeFilterBar() {
+  $("#selected-filters .extra.content").show();
+  $("#widget-cards #close-card").hide();
+  $("#widget-cards").css("background-color", "rgba(255,255,255,0)");
+  $("#widget-cards").css("pointer-events", "none");
+  $("#widget-cards").css("overflow-y", "hidden");
+  $("#widget-cards").removeClass("opened");
+  $("#widget-cards").removeClass("shadow");
+  $(".filter-widget").hide();
+  $("#selected-filters").css("max-height", "280px");
+}
+
+function toggleFilterBar() {
+  if($("#widget-cards").hasClass("opened")) {
+    closeFilterBar();
+  } else {
+    openFilterBar();
   }
 }
 
