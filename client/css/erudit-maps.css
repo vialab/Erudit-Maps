@@ -465,7 +465,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 }
 
 .stations circle {
-  stroke: rgba(0, 0, 0, 0.5);
+  stroke: rgba(0, 0, 0, 0.3);
   stroke-width: 1.5px;
 }
 
@@ -561,7 +561,7 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
   position: absolute;
   top: 4px;
   left: 5px;
-  border: 1px solid rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.3);
 }
 
 #doc-list {
@@ -580,6 +580,41 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 
 .secondary.pointing.menu .toc.item {
   display: none;
+}
+
+#toggle-widgets {
+  position: absolute;
+  top: 20px;
+  left: 370px;
+  height: 50px;
+  width: 20px;
+  margin-top: 15px;
+  border-radius: 2px;
+  background-color: white;
+  box-shadow: 0 2px 4px 0 rgba(125, 125, 125, 0.5);
+  cursor: pointer;
+  z-index: 1;
+}
+
+#toggle-widgets i {
+  position: relative;
+  top: 15px;
+  left: 9px;
+  border: solid #999;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+#toggle-widgets .right {
+  left: 5px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+#toggle-widgets .left {
+  transform: rotate(135deg);
+  -webkit-transform: rotate(135deg);
 }
 
 #widget-cards {

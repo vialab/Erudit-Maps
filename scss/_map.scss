@@ -135,6 +135,38 @@
   display: none;
 }
 
+#toggle-widgets {
+  position: absolute;
+  top: 20px;
+  left: 370px;
+  height: 50px;
+  width: 20px;
+  margin-top: 15px;
+  border-radius: 2px;
+  background-color: white;
+  box-shadow: 0 2px 4px 0 rgba(125, 125, 125, 0.5);
+  cursor: pointer;
+  z-index: 1;
+  i {
+    position: relative;
+    top:15px;
+    left: 9px;
+    border: solid #999;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+  }
+  .right {
+      left: 5px;
+      transform: rotate(-45deg);
+      -webkit-transform: rotate(-45deg);
+  }
+  .left {
+      transform: rotate(135deg);
+      -webkit-transform: rotate(135deg);
+  }
+}
+
 #widget-cards {
   position: absolute;
   top: 0;
@@ -145,6 +177,7 @@
   height: 100vh;
   z-index: 100;
   pointer-events: none;
+
   .card#selected-filters {
     margin: 0;
     max-height: 250px;

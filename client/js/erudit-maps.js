@@ -2,7 +2,7 @@ var $map = $("#map");
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 5,
+  zoom: 3,
   center: new google.maps.LatLng(55, -72),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   mapTypeControl: false,
@@ -92,7 +92,9 @@ function update(data) {
           .attr("r", 4.5)
           .attr("cx", padding)
           .attr("cy", padding)
-          .attr("fill", function(d) { return color_scale(d.entityid); });
+          .attr("fill", function(d) {
+            return "#aaa";
+          });
 
       // clear polys off map before drawing again
       while(polygons.length > 0) {
@@ -109,7 +111,7 @@ function update(data) {
           var polyline = new google.maps.Polygon({
             path: coords,
             geodesic: true,
-            strokeColor: '#008899',
+            strokeColor: '#bbb',
             strokeOpacity: 0.5,
             strokeWeight: 1
           });
@@ -117,11 +119,11 @@ function update(data) {
         } else {
           var polygon = new google.maps.Polygon({
             paths: coords,
-            strokeColor: '#008899',
-            strokeOpacity: 0.5,
+            strokeColor: '#bbb',
+            strokeOpacity: 0.3,
             strokeWeight: 1,
-            fillColor: '#008899',
-            fillOpacity: 0.3
+            fillColor: '#ddd',
+            fillOpacity: 0.1
           });
           polygons.push(polygon);
         }
@@ -375,27 +377,31 @@ function getAuthors(documents) {
 
 // open the side bar if it is not already open
 function openSideBar() {
-  var right_offset = +$("#tool-box").css("right").replace("px","");
-  if(right_offset < 0) {
-    toggleSideBar();
+  $("#toggle-widgets i").removeClass("right");
+  $("#toggle-widgets i").addClass("left");
+  $("#widget-cards").css("left", 0);
+  if($("#widget-cards").hasClass("opened")) {
+    $("#toggle-widgets").css("left", 380);
+  } else {
+    $("#toggle-widgets").css("left", 370);
   }
 }
 
 // close the side bar if it is not already closed
 function closeSideBar() {
-  var right_offset = +$("#tool-box").css("right").replace("px","");
-  if(right_offset == 0) {
-    toggleSideBar();
-  }
+  $("#toggle-widgets i").removeClass("left");
+  $("#toggle-widgets i").addClass("right");
+  $("#widget-cards").css("left", -$("#widget-cards").width()-20);
+  $("#toggle-widgets").css("left", -5);
 }
 
 // toggle the side bar open or closed
 function toggleSideBar() {
-  var right_offset = +$("#tool-box").css("right").replace("px","");
-  if(right_offset < 0) {
-    $("#tool-box").css("right", 0);
+  var left_offset = +$("#widget-cards").css("left").replace("px","");
+  if(left_offset < 0) {
+    openSideBar();
   } else {
-    $("#tool-box").css("right", -$("#tool-box").width()-15);
+    closeSideBar();
   }
 }
 
@@ -409,6 +415,7 @@ function openFilterBar() {
   $("#widget-cards").addClass("shadow");
   $(".filter-widget").show();
   $("#selected-filters").css("max-height", "none");
+  $("#toggle-widgets").css("left", 380);
 }
 
 function closeFilterBar() {
@@ -421,6 +428,7 @@ function closeFilterBar() {
   $("#widget-cards").removeClass("shadow");
   $(".filter-widget").hide();
   $("#selected-filters").css("max-height", "280px");
+  $("#toggle-widgets").css("left", 370);
 }
 
 function toggleFilterBar() {
@@ -456,7 +464,7 @@ $(document).ready(function() {
     author_data = extractAuthorList(map_data.documents);
     drawAuthorList();
     update(map_data);
-    closeSideBar();
+    // closeSideBar();
     // filterJournals();
   });
 });
