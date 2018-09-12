@@ -29,6 +29,7 @@ var polylines = [];
 
 // d3 update map
 function update(data) {
+  clearOverlays();
   // Add the container when the overlay is added to the map.
   var overlay = new google.maps.OverlayView();
   overlay.onAdd = function() {
@@ -93,7 +94,14 @@ function update(data) {
           .attr("cx", padding)
           .attr("cy", padding)
           .attr("fill", function(d) {
-            return "#aaa";
+            return rgb_highlight(d.entityid);
+          })
+          .attr("stroke", function(d) {
+            if(rgb_highlight(d.entityid) != rgb_default) {
+              return "#000";
+            } else {
+              return rgb_stroke;
+            }
           });
 
       // clear polys off map before drawing again
@@ -111,7 +119,7 @@ function update(data) {
           var polyline = new google.maps.Polygon({
             path: coords,
             geodesic: true,
-            strokeColor: '#bbb',
+            strokeColor: rgb_highlight(data.documents[i].entityid),
             strokeOpacity: 0.5,
             strokeWeight: 1
           });
@@ -119,10 +127,10 @@ function update(data) {
         } else {
           var polygon = new google.maps.Polygon({
             paths: coords,
-            strokeColor: '#bbb',
-            strokeOpacity: 0.3,
-            strokeWeight: 1,
-            fillColor: '#ddd',
+            strokeColor: rgb_highlight(data.documents[i].entityid),
+            strokeOpacity: 0.5,
+            strokeWeight: 1.5,
+            fillColor: rgb_highlight(data.documents[i].entityid),
             fillOpacity: 0.1
           });
           polygons.push(polygon);
@@ -232,6 +240,12 @@ function update(data) {
   // Bind our overlay to the map
   overlays.push(overlay);
   overlay.setMap(map);
+}
+
+function clearOverlays() {
+  for(var i=0; i < overlays.length; i++) {
+    overlays[i].setMap(null);
+  }
 }
 
 function getGoogleCoords(links) {
@@ -461,6 +475,7 @@ $(document).ready(function() {
     map_data = data;
     filter_data = map_data;
     extractJournalList(map_data.documents);
+    extractJournalEntity(map_data.documents);
     author_data = extractAuthorList(map_data.documents);
     drawAuthorList();
     update(map_data);

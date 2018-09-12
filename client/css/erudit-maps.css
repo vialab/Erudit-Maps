@@ -465,7 +465,6 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 }
 
 .stations circle {
-  stroke: rgba(0, 0, 0, 0.3);
   stroke-width: 1.5px;
 }
 

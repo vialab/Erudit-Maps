@@ -1,8 +1,11 @@
 var journal = {};
 var journal_data = {};
 var author_data = {};
+var journal_entity_map = {}
 var selected_journals = [];
 var selected_authors = [];
+var hl_journal_id = null;
+var selected_entity = [];
 d3.json("/journal", function(error, data) {
   journal = data;
   // drawJournalList();
@@ -49,37 +52,13 @@ function drawSelectedJournals() {
 // perform some sort of visual feedback on journal identities
 function highlightJournal() {
     $(".filter-item").on("mouseover", function() {
-      var journal_id = $(this).attr("journal-id");
-      var svg = d3.selectAll("svg[journal-id='" + journal_id + "']");
-      svg.selectAll("circle").style("stroke", rgb_highlight)
-        .style("z-index", 999);
-      svg.each(function(d) {
-        d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
-          .selectAll("line")
-          .style("stroke", rgb_highlight)
-          .style("z-index", 999);
-        d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
-          .selectAll("line")
-          .style("stroke", rgb_highlight)
-          .style("z-index", 999);
-      });
+      hl_journal_id = $(this).attr("journal-id");
+      update(filter_data);
     });
 
     $(".filter-item").on("mouseout", function() {
-      var journal_id = $(this).attr("journal-id");
-      var svg = d3.selectAll("svg[journal-id='" + journal_id + "']");
-      svg.selectAll("circle").style("stroke", rgb_highlight)
-        .style("z-index", "auto");
-      svg.each(function(d) {
-        d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
-          .selectAll("line")
-          .style("stroke", rgb_stroke)
-          .style("z-index", "auto");
-        d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
-          .selectAll("line")
-          .style("stroke", rgb_stroke)
-          .style("z-index", "auto");
-      });
+      hl_journal_id = null;
+      update(filter_data);
     });
 }
 
@@ -297,4 +276,19 @@ function drawAuthorList() {
   }
 
   $("#author-list").append(html);
+}
+
+
+function extractJournalEntity(documents) {
+  for(var i=0; i<documents.length; i++) {
+    var jid = documents[i].journalid;
+    var eid = documents[i].entityid;
+    if(journal_entity_map[jid]) {
+      if($.inArray(eid, journal_entity_map[jid]) < 0) {
+        journal_entity_map[jid].push(eid);
+      }
+    } else {
+      journal_entity_map[jid] = [eid];
+    }
+  }
 }
