@@ -83,9 +83,7 @@ function update(data) {
             //   .style("stroke", rgb_stroke);
           })
           .on("click", function(d) {
-            if(pushInfoWidget(d)) {
-
-            }
+            openDocumentsBar(d.entityid, d.affiliation);
           });
 
       // Add a circle.
@@ -357,9 +355,13 @@ function openDocumentsBar(entity_id, affiliation) {
   }
   var html = "";
   for(var i = 0; i < documents.length; i++) {
-    html += "<div class='ui vertical segment doc-info'><h4>" + documents[i].title + "</h4>"
-      + "Author: " + documents[i].author + "<br/>"
-      + "Journal: " + documents[i].journal + "<br/>"
+    var secondary_aff = map_data.entities[documents[i].entityid].affiliation;
+    html += "<div class='ui vertical segment doc-info'><h4>" + documents[i].title
+      + "</h4>Author: " + documents[i].author + "<br/>"
+      if(documents[i].entityid != entity_id && affiliation != secondary_aff) {
+        html += "Affiliation: " + secondary_aff + "<br/>";
+      }
+      html += "Journal: " + documents[i].journal + "<br/>"
       + "Year: " + documents[i].year + "</div><br/>";
   }
   $("#doc-list").append(html);
@@ -373,7 +375,7 @@ function openFilterModal() {
 // get all filtered documents in a specific journal
 function getDocumentsByEntity(entity_id) {
   return $.grep(filter_data.documents, function(n, i) {
-    if(n.entityid == entity_id) return true;
+    if((n.entityid == entity_id )||$.inArray(entity_id, n.links)) return true;
     return false;
   });
 }
