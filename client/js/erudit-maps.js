@@ -486,6 +486,9 @@ function hideLinks(node_id) {
 
 $(document).ready(function() {
   $("#tool-box").width($(window).width() * 0.2);
+  $("#filter-title").on("input", function() {
+    applyFilters(false);
+  });
   // Load the station data. When the data comes back, create an overlay.
   d3.json("/entities", function(error, data) {
     if (error) throw error;

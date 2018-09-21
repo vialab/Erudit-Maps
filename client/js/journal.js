@@ -117,6 +117,7 @@ function applyFilters(update_selected) {
   var min_year = $("select[name='start-year']").val();
   var max_year = $("select[name='end-year']").val();
   filter_data = filterDate(map_data, true);
+  filter_data = filterTitle(filter_data, true);
   filter_data = filterJournals(filter_data, true);
   drawJournalList();
   // then filter our author filter
@@ -345,6 +346,24 @@ function filterDate(data, queued) {
   });
 
   // filter links such that both documents are in selected journals
+  var entities = getEntityList(documents);
+  var new_data = {"documents":documents, "entities":entities};
+  if(queued) return new_data; // filter only and apply filters externally
+  update(new_data); // update the database
+}
+
+function filterTitle(data, queued) {
+  var keyword = $("#filter-title").val().toLowerCase();
+  var entity_list = [];
+  var documents = data.documents.filter(function(n) {
+    if(n.title.toLowerCase().indexOf(keyword) != -1) {
+      if($.inArray(n.entityid, entity_list) == -1) {
+        entity_list.push(n.entityid);
+      }
+      return true
+    }
+    return false;
+  });
   var entities = getEntityList(documents);
   var new_data = {"documents":documents, "entities":entities};
   if(queued) return new_data; // filter only and apply filters externally
