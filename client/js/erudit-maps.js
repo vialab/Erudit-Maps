@@ -63,17 +63,13 @@ function update(data) {
           .on("mouseover", function(d) {
             d3.select(this).selectAll("circle")
               .attr("r", 9)
-              .style("stroke", rgb_highlight);
-            // d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
-            //   .selectAll("line")
-            //   .style("stroke", rgb_highlight);
-            // d3.selectAll("svg.links[doc-source='" + d.documentid + "']")
-            //   .selectAll("line")
-            //   .style("stroke", rgb_highlight);
+              .attr("fill", "rgba(63, 184, 175, 0.8)")
+              .style("stroke", "rgba(63, 184, 175, 1)")
           })
           .on("mouseout", function(d) {
             d3.select(this).selectAll("circle")
               .attr("r", 4.5)
+              .attr("fill", rgb_highlight(d.entityid))
               .style("stroke", rgb_highlight);
             // d3.selectAll("svg.links[doc-target='" + d.documentid + "']")
             //   .selectAll("line")
@@ -101,6 +97,20 @@ function update(data) {
               return rgb_stroke;
             }
           });
+
+      $("svg circle").tipsy({
+        gravity: "w",
+        html: true,
+        title: function() {
+          var d = this.__data__;
+          return d.affiliation;
+        }
+      });
+
+      $("svg circle").mousemove(function( event ) {
+       $(".tipsy").css("left",(event.pageX+16)+"px");
+       $(".tipsy").css("top",(event.pageY-16)+"px");
+      })
 
       // clear polys off map before drawing again
       while(polygons.length > 0) {
