@@ -72,7 +72,6 @@ function removeJournalFilter(elem) {
   selected_journals = selected_journals.filter(function(item) {
     return item != journal_id;
   });
-
   applyFilters(true);
 }
 
@@ -82,11 +81,11 @@ function filterJournals(data, queued) {
   selected_journals = selected_journals.concat($("select#journal-list").val());
   if(selected_journals.length == 0) {
     $("#journal-filter i").show();
-    $("#filter-list h2.journal").html("Selected Journals");
+    $("#filter-list h2.journal").html("Selected Journals <a onclick='clearJournalFilters();'>clear</a>");
     return data;
   } else {
     $("#journal-filter i").hide();
-    $("#filter-list h2.journal").html("Selected Journals (" + selected_journals.length + ")");
+    $("#filter-list h2.journal").html("Selected Journals (" + selected_journals.length + ") <a onclick='clearJournalFilters();'>clear</a>");
   }
   var entity_list = [];
   var documents = $.grep(data.documents, function(n, i) {
@@ -174,11 +173,11 @@ function filterAuthors(data, queued) {
   selected_authors = selected_authors.concat($("select#author-list").val());
   if(selected_authors.length == 0) {
     $("#author-filter i").show();
-    $("#filter-list h2.author").html("Selected Authors");
+    $("#filter-list h2.author").html("Selected Authors <a onclick='clearAuthorFilters();'>clear</a>");
     return data;
   } else {
     $("#author-filter i").hide();
-    $("#filter-list h2.author").html("Selected Authors (" + selected_authors.length + ")");
+    $("#filter-list h2.author").html("Selected Authors (" + selected_authors.length + ") <a onclick='clearAuthorFilters();'>clear</a>");
   }
   var entity_list = [];
   var documents = $.grep(data.documents, function(n, i) {
@@ -332,8 +331,8 @@ function populateDateRange(min, max) {
 
 function filterDate(data, queued) {
   var values = $("#filter-date")[0].noUiSlider.get();
-  var min_year = values[0];
-  var max_year = values[1];
+  var min_year = parseInt(values[0]);
+  var max_year = parseInt(values[1]);
   var entity_list = [];
   var documents = data.documents.filter(function(n) {
     if(n.year >= min_year && n.year <= max_year) {
@@ -344,7 +343,7 @@ function filterDate(data, queued) {
     }
     return false;
   });
-
+  $("#filter-list h2.year").html("Year Range (" + min_year + "-" + max_year + ")");
   // filter links such that both documents are in selected journals
   var entities = getEntityList(documents);
   var new_data = {"documents":documents, "entities":entities};
@@ -384,4 +383,16 @@ function getEntityList(documents) {
     }
   }
   return entities;
+}
+
+function clearJournalFilters() {
+  $("#journal-filter .filter-item").remove();
+  selected_journals = [];
+  applyFilters(false);
+}
+
+function clearAuthorFilters() {
+  $("#author-filter .filter-item").remove();
+  selected_authors = [];
+  applyFilters(false);
 }
