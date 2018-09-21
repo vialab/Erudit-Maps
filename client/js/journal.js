@@ -2,6 +2,7 @@ var journal = {};
 var journal_data = {};
 var author_data = {};
 var journal_entity_map = {}
+var entity_map = {};
 var selected_journals = [];
 var selected_authors = [];
 var hl_journal_id = null;
@@ -98,10 +99,7 @@ function filterJournals(data, queued) {
     return false;
   });
   // filter links such that both documents are in selected journals
-  var entities = {};
-  for(var id in entity_list) {
-    entities[entity_list[id]] = data.entities[entity_list[id]];
-  }
+  var entities = getEntityList(documents);
   var new_data = {"documents":documents, "entities":entities};
   // remove selected journals from our select list
   for(var i=0; i<selected_journals.length; i++) {
@@ -116,7 +114,10 @@ function filterJournals(data, queued) {
 function applyFilters(update_selected) {
   clearOverlay();
   // start by filtering by journal
-  filter_data = filterJournals(map_data, true);
+  var min_year = $("select[name='start-year']").val();
+  var max_year = $("select[name='end-year']").val();
+  filter_data = filterDate(map_data, true);
+  filter_data = filterJournals(filter_data, true);
   drawJournalList();
   // then filter our author filter
   filter_data = filterAuthors(filter_data, true);
@@ -184,15 +185,12 @@ function filterAuthors(data, queued) {
       if($.inArray(n.entityid+"", entity_list) == -1) {
         entity_list.push(n.entityid);
       }
-      return true
+      return true;
     }
     return false;
   });
   // filter links such that both documents are in selected journals
-  var entities = {};
-  for(var id in entity_list) {
-    entities[entity_list[id]] = data.entities[entity_list[id]];
-  }
+  var entities = getEntityList(documents);
   var new_data = {"documents":documents, "entities":entities};
   // remove selected journals from our select list
   for(var i=0; i<selected_authors.length; i++) {
@@ -290,5 +288,81 @@ function extractJournalEntity(documents) {
     } else {
       journal_entity_map[jid] = [eid];
     }
+    var links = documents[i].links;
+    for(var j in links) {
+      if(!entity_map[eid]) {
+        entity_map[eid] = [];
+      }
+      if($.inArray(links[j], entity_map[eid]) == -1) {
+        entity_map[eid].push(links[j]);
+      }
+    }
   }
+}
+
+function extractDateRange(documents) {
+  var min_year = 9999;
+  var max_year = 0;
+  for(var i=0; i<documents.length; i++) {
+    if(documents[i].year < min_year) min_year = documents[i].year;
+    if(documents[i].year > max_year) max_year = documents[i].year;
+  }
+  populateDateRange(min_year, max_year);
+  $("select[name='start-year'], select[name='end-year']").change(function() {
+    applyFilters(false);
+  });
+}
+
+function populateDateRange(min, max) {
+  var slider = $("#filter-date")[0];
+  noUiSlider.create(slider, {
+      start: [min, max],
+      connect: true,
+      range: {
+          'min': parseInt(min),
+          'max': parseInt(max)
+      },
+      tooltips: [wNumb({decimals: 0}), wNumb({decimals: 0})]
+  });
+  $("#filter-date")[0].noUiSlider.on("update", function() {
+    applyFilters(false);
+  });
+}
+
+function filterDate(data, queued) {
+  var values = $("#filter-date")[0].noUiSlider.get();
+  var min_year = values[0];
+  var max_year = values[1];
+  var entity_list = [];
+  var documents = data.documents.filter(function(n) {
+    if(n.year >= min_year && n.year <= max_year) {
+      if($.inArray(n.entityid, entity_list) == -1) {
+        entity_list.push(n.entityid);
+      }
+      return true
+    }
+    return false;
+  });
+
+  // filter links such that both documents are in selected journals
+  var entities = getEntityList(documents);
+  var new_data = {"documents":documents, "entities":entities};
+  if(queued) return new_data; // filter only and apply filters externally
+  update(new_data); // update the database
+}
+
+function getEntityList(documents) {
+  var entities = {}
+  for(var i in documents) {
+    var eid = documents[i].entityid;
+    var links = documents[i].links;
+    entities[eid] = map_data.entities[eid];
+    for(var j in links) {
+      var lid = links[j];
+      if(!entities[lid]) {
+        entities[lid] = map_data.entities[lid];
+      }
+    }
+  }
+  return entities;
 }

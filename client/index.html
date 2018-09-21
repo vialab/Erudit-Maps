@@ -24,6 +24,7 @@
     <!-- Custom styles for this template -->
     <link href="css/main.min.css" rel="stylesheet">
     <link href="css/erudit-maps.min.css" rel="stylesheet">
+    <link href="css/nouislider.min.css" rel="stylesheet">
   </head>
 
   <body class="pushable" id="page-top">
@@ -74,6 +75,8 @@
               <ul id="author-filter">
                 <i>None Selected</i>
               </ul>
+              <h2>Year Range</h2>
+              <div id="filter-date" class="nouislider"></div>
             </div>
           </div>
           <div class="extra content transition" onclick="toggleFilterBar();">
@@ -144,6 +147,8 @@
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
 
     <!-- Custom scripts for this template -->
+    <script src="js/wNumb.min.js"></script>
+    <script src="js/nouislider.min.js"></script>
     <script src="js/variables.min.js"></script>
     <script src="js/main.min.js"></script>
     <script src="//maps.google.com/maps/api/js?key=AIzaSyCqdIacUciZPQcOmfNAuaqsH17wDLj8wD8"></script>

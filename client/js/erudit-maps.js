@@ -112,6 +112,11 @@ function update(data) {
 
       for(var i = 0; i < data.documents.length; i++) {
         if(data.documents[i].links.length < 2) continue;
+        try {
+          var coords = getGoogleCoords(data.documents[i].links);
+        } catch(e) {
+          console.log(i);
+        }
         var coords = getGoogleCoords(data.documents[i].links);
         if(data.documents[i].links.length < 3) {
           var polyline = new google.maps.Polygon({
@@ -476,11 +481,13 @@ $(document).ready(function() {
     if (error) throw error;
     map_data = data;
     filter_data = map_data;
+    extractDateRange(map_data.documents);
     extractJournalList(map_data.documents);
     extractJournalEntity(map_data.documents);
     author_data = extractAuthorList(map_data.documents);
     drawAuthorList();
-    update(map_data);
+    // update(map_data);
+    applyFilters(false);
     // closeSideBar();
     // filterJournals();
   });
