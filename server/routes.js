@@ -1,6 +1,5 @@
 const request = require('request');
 const bodyParser = require('body-parser');
-const variables = require('./config.js');
 const data = require('./entities.json');
 const journal_data = require('./journal.json');
 
