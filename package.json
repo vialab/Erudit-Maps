@@ -3,21 +3,28 @@
   "name": "Erudit-Maps",
   "version": "1.0.0",
   "description": "Entity mapping of the Erudit Corpus",
-  "keywords": ["css", "sass", "html", "responsive", "theme", "template"],
+  "keywords": [
+    "css",
+    "sass",
+    "html",
+    "responsive",
+    "theme",
+    "template"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/vialab/Erudit-Maps.git"
   },
   "dependencies": {
-    "body-parser": "^1.18.2",
+    "body-parser": "^1.19.0",
     "bootstrap": "4.0.0",
-    "express": "^4.16.3",
+    "express": "^4.17.1",
     "font-awesome": "4.7.0",
     "jquery": "3.3.0",
     "jquery.easing": "^1.4.1",
-    "request": "^2.85.0",
-    "semantic-ui-css": "^2.3.1",
+    "request": "^2.88.0",
+    "semantic-ui-css": "^2.4.1",
     "simple-line-icons": "2.4.1"
   },
   "scripts": {
