@@ -6,6 +6,7 @@ var entity_map = {};
 var selected_journals = [];
 var selected_authors = [];
 var hl_journal_id = null;
+var hl_pinned = false;
 var selected_entity = [];
 d3.json("/journal", function(error, data) {
   journal = data;
@@ -53,12 +54,29 @@ function drawSelectedJournals() {
 // perform some sort of visual feedback on journal identities
 function highlightJournal() {
     $(".filter-item").on("mouseover", function() {
+      if(hl_pinned) return;
       hl_journal_id = $(this).attr("journal-id");
       update(filter_data);
     });
 
     $(".filter-item").on("mouseout", function() {
+      if(hl_pinned) return;
       hl_journal_id = null;
+      update(filter_data);
+    });
+
+    $(".filter-item").on("click", function() {
+      if(($(this).attr("journal-id") == hl_journal_id) && hl_pinned) {
+        $(".filter-item").removeClass("pinned");
+        $(".filter-item").css("background-color", "");
+        hl_pinned = false;
+        hl_journal_id = null;
+      } else {
+        $(this).addClass("pinned");
+        $(this).css("background-color", $(".filter-legend", this).css("background-color"));
+        hl_pinned = true;
+        hl_journal_id = $(this).attr("journal-id");
+      }
       update(filter_data);
     });
 }
@@ -386,6 +404,10 @@ function getEntityList(documents) {
 }
 
 function clearJournalFilters() {
+  $(".filter-item").removeClass("pinned");
+  $(".filter-item").css("background-color", "");
+  hl_pinned = false;
+  hl_journal_id = null;
   $("#journal-filter .filter-item").remove();
   selected_journals = [];
   applyFilters(false);

@@ -12,7 +12,7 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   zoomControlOptions: {
       position: google.maps.ControlPosition.RIGHT_CENTER
   }
-  // ,styles:[{"stylers": [{"saturation": -50},{"lightness": 50}]}]
+  ,styles:[{"stylers": [{"saturation": -60},{"lightness": 50}]}]
 });
 
 var map_data;
@@ -133,7 +133,7 @@ function update(data) {
             path: coords,
             geodesic: true,
             strokeColor: rgb_highlight(data.documents[i].entityid),
-            strokeOpacity: 0.5,
+            strokeOpacity: 0.8,
             strokeWeight: 1
           });
           polylines.push(polyline);
