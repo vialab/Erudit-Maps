@@ -1,6 +1,6 @@
 # Erudit Knowledge Map
 
-The Érudit Knowledge Map aims at mapping the knowledge transfer that occurs in the Érudit corpus, such as co-authorship networks in specific journals, or by institution, date, author or paper title.
+The collaboration maps project is a visualization framework that uses metadata from the Erudit corpus to show the collaborative worldwide academic networks that make up the document corpora. Users can filter based on multiple factors including author, date, academic institution, and journal. Several levels of granularity allows users the ability to investigate how and when the corpus was created. Used in concert with the rest of the corpus analysis suite, the collaboration maps give a full view of academic partnerships and their geography.
 
 ## Getting Started
 
@@ -38,13 +38,7 @@ Here is a list of available tasks:
 
 ## Deployment
 
-Deployment is made simple due to the use of Docker. Run the shell script using the command provided below, and ensure that the appropriate routing/proxies have been setup on your web server. 
-
-NOTE: Modifications of used ports may be required.
-
-```
-./run.sh
-```
+Deployment for this project has been automated, and so please be aware that pushes to this repository will automatically build, run, and deploy to the VIALAB production servers at https://collabmap.vialab.ca/. 
 
 ## Built With
 
