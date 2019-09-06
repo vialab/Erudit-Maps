@@ -12,14 +12,132 @@ var map = new google.maps.Map(d3.select("#map").node(), {
   zoomControlOptions: {
     position: google.maps.ControlPosition.RIGHT_CENTER
   },
-  //styles can be grayscale "stylers": [s
-  //          {
-  //            "saturation": -100
-  //        },
-  //        {
-  //            "lightness": 65
-  //        },
-  styles: [{ stylers: [{ saturation: -60 }, { lightness: 50 }] }]
+
+  styles: [
+    {
+      featureType: "administrative",
+      elementType: "all",
+      stylers: [
+        {
+          saturation: "-100"
+        }
+      ]
+    },
+    {
+      featureType: "administrative.province",
+      elementType: "all",
+      stylers: [
+        {
+          visibility: "off"
+        }
+      ]
+    },
+    {
+      featureType: "landscape",
+      elementType: "all",
+      stylers: [
+        {
+          saturation: -100
+        },
+        {
+          lightness: 65
+        },
+        {
+          visibility: "on"
+        }
+      ]
+    },
+    {
+      featureType: "poi",
+      elementType: "all",
+      stylers: [
+        {
+          saturation: -100
+        },
+        {
+          lightness: "50"
+        },
+        {
+          visibility: "simplified"
+        }
+      ]
+    },
+    {
+      featureType: "road",
+      elementType: "all",
+      stylers: [
+        {
+          saturation: "-100"
+        }
+      ]
+    },
+    {
+      featureType: "road.highway",
+      elementType: "all",
+      stylers: [
+        {
+          visibility: "simplified"
+        }
+      ]
+    },
+    {
+      featureType: "road.arterial",
+      elementType: "all",
+      stylers: [
+        {
+          lightness: "30"
+        }
+      ]
+    },
+    {
+      featureType: "road.local",
+      elementType: "all",
+      stylers: [
+        {
+          lightness: "40"
+        }
+      ]
+    },
+    {
+      featureType: "transit",
+      elementType: "all",
+      stylers: [
+        {
+          saturation: -100
+        },
+        {
+          visibility: "simplified"
+        }
+      ]
+    },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [
+        {
+          hue: "#ffff00"
+        },
+        {
+          lightness: -25
+        },
+        {
+          saturation: -97
+        }
+      ]
+    },
+    {
+      featureType: "water",
+      elementType: "labels",
+      stylers: [
+        {
+          lightness: -25
+        },
+        {
+          saturation: -100
+        }
+      ]
+    }
+  ]
 });
 
 var map_data;
@@ -55,6 +173,7 @@ var color_scale = d3.scale.ordinal().range(colors);
 var node_coord = {};
 var polygons = [];
 var polylines = [];
+var bubbleset = new BubbleSet();
 // d3 update map
 function update(data) {
   clearOverlays();
@@ -167,11 +286,9 @@ function update(data) {
         }
         //insert bubbleset here
         //each coord should be a node in the
-        var coords = getGoogleCoords(data.documents[i].links);
         //////////////////////////////////////////////////////////////
         ///////////this needs its own function///////////////////////
         coordRects = getBubbleSetCoords(data.documents[i].links);
-        var bubbleset = new BubbleSet();
         //create Outline for bubbleset
         //after outline is created get string outline somehow bind it to google map through polygon
         let diff = new Set(
@@ -187,8 +304,8 @@ function update(data) {
           setRects.push({
             x: projection.fromLatLngToContainerPixel(tmp).x,
             y: projection.fromLatLngToContainerPixel(tmp).y,
-            width: 0.5,
-            height: 0.5
+            width: 5,
+            height: 5
           });
         });
         diff.forEach(x => {
@@ -196,14 +313,14 @@ function update(data) {
           diffRects.push({
             x: projection.fromLatLngToContainerPixel(tmp).x,
             y: projection.fromLatLngToContainerPixel(tmp).y,
-            width: 0.5,
-            height: 0.5
+            width: 5,
+            height: 5
           });
         });
 
         var list = bubbleset.createOutline(
-          BubbleSet.addPadding(setRects, 0.1),
-          BubbleSet.addPadding(diffRects, 0.1),
+          BubbleSet.addPadding(setRects, 5),
+          BubbleSet.addPadding(diffRects, 5),
           null
         );
         var outline = new PointPath(list).transform([
@@ -222,7 +339,6 @@ function update(data) {
             lng: tmpCoordinates.lng()
           });
         });
-        //console.log(polyLineNodes);
         //draw outline of bubbleset
         var tmpPolyline = new google.maps.Polygon({
           path: polyLineNodes,
