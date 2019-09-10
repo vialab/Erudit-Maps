@@ -174,232 +174,183 @@ var node_coord = {};
 var polygons = [];
 var polylines = [];
 var bubbleset = new BubbleSet();
-// d3 update map
-function update(data) {
-  clearOverlays();
-  // Add the container when the overlay is added to the map.
-  var overlay = new google.maps.OverlayView();
+var overlay;
+var layer;
+var svg;
+var adminDivisions;
+var projection;
+var padding = 10;
+//bubbleset values
+var bubbleSetOutlineThickness = 1;
+var bubbleSetPadding = 2;
+var bubbleSetOpacity = 0.35;
+var myData = null;
+var isLoaded = false;
+var updateDataFunction = updateDataBeforeMapLoad;
+var loadListener;
+//On webpage load
+//This should init the google maps overlay and request the api
+//this should also bind all of the overlay functions
+function onLoad() {
+  loadListener = map.addListener("tilesloaded", () => {
+    isLoaded = true;
+    updateDataFunction = updateData;
+    overlay.draw = drawOverlay;
+    console.log("tilesloaded");
+    update(myData);
+    google.maps.event.removeListener(loadListener);
+  });
+  console.log(loadListener);
+  overlay = new google.maps.OverlayView();
   overlay.onAdd = function() {
-    this.layer = d3
-      .select(this.getPanes().overlayMouseTarget)
+    overlay.layer = d3
+      .select(overlay.getPanes().overlayMouseTarget)
       .append("div")
       .attr("class", "stations");
 
-    var layer = d3
-      .select(this.getPanes().overlayLayer)
+    layer = d3
+      .select(overlay.getPanes().overlayLayer)
       .append("div")
       .attr("class", "SvgOverlay");
-    var svg = layer.append("svg");
-    var adminDivisions = svg.append("g").attr("class", "AdminDivisions");
-
-    // Draw each marker as a separate SVG element.
-    // We could use a single SVG, but what size would it have?
-    overlay.draw = function() {
-      var markerOverlay = this;
-      var projection = markerOverlay.getProjection();
-      var padding = 10,
-        radius = 1;
-      //console.log(data.entities);
-      // create an svg for each node and apply actions
-      var marker = this.layer
-        .selectAll("svg")
-        .data(d3.values(data.entities))
-        .each(transform) // update existing markers
-        .enter()
-        .append("svg")
-        .each(transform)
-        .attr("class", "marker")
-        .attr("doc-id", function(d) {
-          return d.entityid;
-        })
-        .attr("journal-id", function(d) {
-          return d.entityid;
-        })
-        .on("mouseover", function(d) {
-          d3.select(this)
-            .selectAll("circle")
-            .attr("r", 9)
-            .attr("fill", "rgba(63, 184, 175, 0.8)")
-            .style("stroke", "rgba(63, 184, 175, 1)");
-        })
-        .on("mouseout", function(d) {
-          d3.select(this)
-            .selectAll("circle")
-            .attr("r", 4.5)
-            .attr("fill", rgb_highlight(d.entityid))
-            .style("stroke", rgb_highlight);
-        })
-        .on("click", function(d) {
-          openDocumentsBar(d.entityid, d.affiliation);
-        });
-
-      // Add a circle.
-      marker
-        .append("circle")
-        .attr("r", 4.5)
-        .attr("cx", padding)
-        .attr("cy", padding)
-        .attr("fill", function(d) {
-          return rgb_highlight(d.entityid);
-        })
-        .attr("stroke", function(d) {
-          if (rgb_highlight(d.entityid) != rgb_default) {
-            return "#000";
-          } else {
-            return rgb_stroke;
-          }
-        });
-
-      $("svg circle").tipsy({
-        gravity: "w",
-        html: true,
-        title: function() {
-          var d = this.__data__;
-          return d.affiliation;
-        }
-      });
-
-      $("svg circle").mousemove(function(event) {
-        $(".tipsy").css("left", event.pageX + 16 + "px");
-        $(".tipsy").css("top", event.pageY - 16 + "px");
-      });
-
-      // clear polys off map before drawing again
-      while (polygons.length > 0) {
-        polygons.pop().setMap(null);
-      }
-      while (polylines.length > 0) {
-        polylines.pop().setMap(null);
-      }
-
-      NodeSet = [];
-      entities = Object.values(data.entities);
-      for (var i = 0; i < entities.length; i++) {
-        NodeSet.push([entities[i].lat, entities[i].lng]);
-      }
-      for (var i = 0; i < data.documents.length; i++) {
-        //insert bubbleset here
-        //each coord should be a node in the
-        //////////////////////////////////////////////////////////////
-        ///////////this needs its own function///////////////////////
-        coordRects = getBubbleSetCoords(data.documents[i].links);
-        let diff = NodeSet.filter(x => {
-          return !coordRects.includes(x);
-        });
-        //create Outline for bubbleset
-        //after outline is created get string outline somehow bind it to google map through polygon
-        //let diff = new Set(
-        //  [...NodeSet].filter(x => {
-        //    !coordRects.has(x);
-        //    print(!coordsRects.has(x));
-        //  })
-        //);
-        //console.log(NodeSet.length + " " + coordRects.length);
-        setRects = [];
-        diffRects = [];
-        coordRects.forEach(x => {
-          let tmp = new google.maps.LatLng(x[0], x[1]);
-          //console.log(projection.fromLatLngToDivPixel(tmp));
-          setRects.push({
-            x: projection.fromLatLngToContainerPixel(tmp).x,
-            y: projection.fromLatLngToContainerPixel(tmp).y,
-            width: 10,
-            height: 10
-          });
-        });
-        diff.forEach(x => {
-          let tmp = new google.maps.LatLng(x[0], x[1]);
-          diffRects.push({
-            x: projection.fromLatLngToContainerPixel(tmp).x,
-            y: projection.fromLatLngToContainerPixel(tmp).y,
-            width: 10,
-            height: 10
-          });
-        });
-
-        var list = bubbleset.createOutline(
-          BubbleSet.addPadding(setRects, 1),
-          BubbleSet.addPadding(diffRects, 1),
-          null
-        );
-        var outline = new PointPath(list).transform([
-          new ShapeSimplifier(0.0),
-          new BSplineShapeGenerator(),
-          new ShapeSimplifier(0.0)
-        ]);
-        polyLineNodes = [];
-        outline.forEach(d => {
-          let tmpPoint = new google.maps.Point(d[0], d[1]);
-
-          var tmpCoordinates = projection.fromContainerPixelToLatLng(tmpPoint);
-
-          polyLineNodes.push({
-            lat: tmpCoordinates.lat(),
-            lng: tmpCoordinates.lng()
-          });
-        });
-        //draw outline of bubbleset
-        var tmpPolyline = new google.maps.Polygon({
-          path: polyLineNodes,
-          strokeColor: "#000000",
-          strokeOpacity: 0.5,
-          strokeWeight: 0.5,
-          fillColor: color_scale(i % 23),
-          fillOpacity: "0.35"
-        });
-        polylines.push(tmpPolyline);
-        drawLineNodesStraight(data, i, getCoords(data.documents[i].links));
-        //if (data.documents[i].links.length < 3) {
-        //  var polyline = new google.maps.Polygon({
-        //    path: coords,
-        //    geodesic: true,
-        //    strokeColor: rgb_highlight(data.documents[i].entityid),
-        //    strokeOpacity: 0.8,
-        //    strokeWeight: 1
-        //  });
-        //  polylines.push(polyline);
-        //} else {
-        //  var polygon = new google.maps.Polygon({
-        //    paths: coords,
-        //    strokeColor: rgb_highlight(data.documents[i].entityid),
-        //    strokeOpacity: 0.5,
-        //    strokeWeight: 1.5,
-        //    fillColor: rgb_highlight(data.documents[i].entityid),
-        //    fillOpacity: 0.1
-        //  });
-        //  polygons.push(polygon);
-        //}
-      }
-
-      // Bind polylines to the map
-      for (var i = 0; i < polylines.length; i++) {
-        polylines[i].setMap(map);
-      }
-      // Bind polygons to the map
-      for (var i = 0; i < polygons.length; i++) {
-        polygons[i].setMap(map);
-      }
-
-      // transform d by projecting lat and lng values to x y coords
-      function transform(d) {
-        node_coord[d.entityid] = [d.lat, d.lng];
-        d = new google.maps.LatLng(d.lat, d.lng);
-        d = projection.fromLatLngToDivPixel(d);
-        return d3
-          .select(this)
-          .style("left", d.x - padding + "px")
-          .style("top", d.y - padding + "px")
-          .style("z-index", 99);
-      }
-    };
-
+    svg = layer.append("svg");
+    adminDivisions = svg.append("g").attr("class", "AdminDivisions");
+    projection = this.getProjection();
+    overlay.draw = function() {};
+    // Bind our overlay to the map
     overlay.onRemove = function() {
       this.layer.remove();
     };
+    console.log("onAdd finished");
   };
-  // Bind our overlay to the map
-  overlays.push(overlay);
   overlay.setMap(map);
+}
+
+// d3 update map
+function update(data) {
+  updateDataFunction(data);
+  if (isLoaded) {
+    overlay.layer.selectAll("svg").remove();
+    var marker = overlay.layer
+      .selectAll("svg")
+      .data(d3.values(data.entities))
+      .each(transform) // update existing markers
+      .enter()
+      .append("svg")
+      .each(transform)
+      .attr("class", "marker")
+      .attr("doc-id", function(d) {
+        return d.entityid;
+      })
+      .attr("journal-id", function(d) {
+        return d.entityid;
+      })
+      .on("mouseover", function(d) {
+        d3.select(this)
+          .selectAll("circle")
+          .attr("r", 9)
+          .attr("fill", "rgba(63, 184, 175, 0.8)")
+          .style("stroke", "rgba(63, 184, 175, 1)");
+      })
+      .on("mouseout", function(d) {
+        d3.select(this)
+          .selectAll("circle")
+          .attr("r", 4.5)
+          .attr("fill", rgb_highlight(d.entityid))
+          .style("stroke", rgb_highlight);
+      })
+      .on("click", function(d) {
+        openDocumentsBar(d.entityid, d.affiliation);
+      });
+
+    //// Add a circle.
+    marker
+      .append("circle")
+      .attr("r", 4.5)
+      .attr("cx", padding)
+      .attr("cy", padding)
+      .attr("fill", function(d) {
+        return rgb_highlight(d.entityid);
+      })
+      .attr("stroke", function(d) {
+        if (rgb_highlight(d.entityid) != rgb_default) {
+          return "#000";
+        } else {
+          return rgb_stroke;
+        }
+      });
+
+    $("svg circle").tipsy({
+      gravity: "w",
+      html: true,
+      title: function() {
+        var d = this.__data__;
+        return d.affiliation;
+      }
+    });
+
+    $("svg circle").mousemove(function(event) {
+      $(".tipsy").css("left", event.pageX + 16 + "px");
+      $(".tipsy").css("top", event.pageY - 16 + "px");
+    });
+
+    //clear polys off map before drawing again
+    emptyMap();
+
+    var NodeSet = [];
+    var entities = Object.values(data.entities);
+    for (var i = 0; i < entities.length; i++) {
+      NodeSet.push([entities[i].lat, entities[i].lng]);
+    }
+    for (var i = 0; i < data.documents.length / 4; i++) {
+      //insert bubbleset here
+      //each coord should be a node in the
+      //////////////////////////////////////////////////////////////
+      ///////////this needs its own function///////////////////////
+      var coordRects = getBubbleSetCoords(data.documents[i].links);
+      polyLineNodes = calculateBubbleSet(
+        NodeSet,
+        coordRects,
+        projection,
+        bubbleSetPadding
+      );
+      //draw outline of bubbleset
+      var tmpPolyline = new google.maps.Polygon({
+        path: polyLineNodes,
+        strokeColor: "#000000",
+        strokeOpacity: 0.5,
+        strokeWeight: bubbleSetOutlineThickness,
+        fillColor: color_scale(i % 23),
+        fillOpacity: bubbleSetOpacity
+      });
+      polylines.push(tmpPolyline);
+      //drawLineNodesStraight(data, i, getCoords(data.documents[i].links));
+    }
+
+    // Bind polylines to the map
+    for (var i = 0; i < polylines.length; i++) {
+      polylines[i].setMap(map);
+    }
+    // Bind polygons to the map
+    for (var i = 0; i < polygons.length; i++) {
+      polygons[i].setMap(map);
+    }
+  }
+}
+function updateDataBeforeMapLoad(data) {
+  myData = { ...myData, ...data };
+}
+function updateData(data) {
+  myData = data;
+}
+function transform(d) {
+  node_coord[d.entityid] = [d.lat, d.lng];
+  d = new google.maps.LatLng(d.lat, d.lng);
+  d = projection.fromLatLngToDivPixel(d);
+  return d3
+    .select(this)
+    .style("left", d.x - padding + "px")
+    .style("top", d.y - padding + "px")
+    .style("z-index", 99);
 }
 
 function clearOverlays() {
@@ -407,7 +358,53 @@ function clearOverlays() {
     overlays[i].setMap(null);
   }
 }
+function calculateBubbleSet(completeNodeSet, targetSet, projection, padding) {
+  let diff = completeNodeSet.filter(x => {
+    return !targetSet.includes(x);
+  });
+  var setRects = [];
+  var diffRects = [];
+  targetSet.forEach(x => {
+    let tmp = new google.maps.LatLng(x[0], x[1]);
+    setRects.push({
+      x: projection.fromLatLngToContainerPixel(tmp).x,
+      y: projection.fromLatLngToContainerPixel(tmp).y,
+      width: 10,
+      height: 10
+    });
+  });
 
+  diff.forEach(x => {
+    let tmp = new google.maps.LatLng(x[0], x[1]);
+    diffRects.push({
+      x: projection.fromLatLngToContainerPixel(tmp).x,
+      y: projection.fromLatLngToContainerPixel(tmp).y,
+      width: 10,
+      height: 10
+    });
+  });
+
+  var list = bubbleset.createOutline(
+    BubbleSet.addPadding(setRects, padding),
+    BubbleSet.addPadding(diffRects, padding),
+    null
+  );
+  var outline = new PointPath(list).transform([
+    new ShapeSimplifier(0.0),
+    new BSplineShapeGenerator(),
+    new ShapeSimplifier(0.0)
+  ]);
+  polyLineNodes = [];
+  outline.forEach(d => {
+    let tmpPoint = new google.maps.Point(d[0], d[1]);
+    var tmpCoordinates = projection.fromContainerPixelToLatLng(tmpPoint);
+    polyLineNodes.push({
+      lat: tmpCoordinates.lat(),
+      lng: tmpCoordinates.lng()
+    });
+  });
+  return polyLineNodes;
+}
 function getBubbleSetCoords(links) {
   let bubSet = [];
   for (var i = 0; i < links.length; i++) {
@@ -469,6 +466,32 @@ function drawLineNodesStraight(data, i) {
       fillOpacity: 0.1
     });
     polygons.push(polygon);
+  }
+}
+//empty all nodes associated to the map: polygons, polylines...etc.
+function emptyMap() {
+  // clear polys off map before drawing again
+  while (polygons.length > 0) {
+    polygons.pop().setMap(null);
+  }
+  while (polylines.length > 0) {
+    polylines.pop().setMap(null);
+  }
+}
+//draw functions for map -- might not have to clear overlays we will see
+function drawOverlay() {
+  //clearOverlays();
+  //layer.selectAll("svg").each(transform);
+  overlay.layer
+    .selectAll("svg")
+    .data(d3.values(myData.entities))
+    .each(transform);
+
+  for (var i = 0; i < polygons.length; i++) {
+    polygons[i].setMap(map);
+  }
+  for (var i = 0; i < polylines.length; i++) {
+    polylines[i].setMap(map);
   }
 }
 function getGoogleCoords(links) {

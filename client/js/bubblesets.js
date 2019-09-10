@@ -1252,6 +1252,7 @@ function BubbleSet() {
         var tempY = y * pixelGroup + activeRegion.minY();
         var distanceSq = getRectDistSq(rect, tempX, tempY);
         // only influence if less than r1
+        //possible performance increase by reducing 
         if(distanceSq < r1 * r1) {
           var dr = Math.sqrt(distanceSq) - r1;
           potentialArea.set(x, y, potentialArea.get(x, y) + influenceFactor * dr * dr);
