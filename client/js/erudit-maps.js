@@ -173,7 +173,14 @@ var color_scale = d3.scale.ordinal().range(colors);
 var node_coord = {};
 var polygons = [];
 var polylines = [];
+var sets = [];
+var links;
 var bubbleset = new BubbleSet();
+//web worker max number the hardware supports
+var maxWorkers = navigator.hardwareConcurrency;
+var numOfWorkers = 0;
+var taskIndex = 0;
+//overlay variables
 var overlay;
 var layer;
 var svg;
@@ -202,6 +209,7 @@ function onLoad() {
     overlay.draw = drawOverlay;
     //createQuadTree(Object.values(myData.entities));
     console.log("tilesloaded");
+    links = checkForDuplicates(myData.documents);
     update(myData);
     google.maps.event.removeListener(loadListener);
   });
@@ -229,13 +237,12 @@ function onLoad() {
   };
   overlay.setMap(map);
 }
-
 // d3 update map
 function update(data) {
   updateDataFunction(data);
   updateMapFunction(data);
 }
-
+//updates the map based on the data received. This function is called once the map tiles have finished loading on the page.
 function updateMap(data) {
   overlay.layer.selectAll("svg").remove();
   var marker = overlay.layer
@@ -306,35 +313,17 @@ function updateMap(data) {
 
   var NodeSet = [];
   var entities = Object.values(data.entities);
+  var test = [];
   console.log(entities);
+  console.log(data.documents);
+  console.time("async");
   for (var i = 0; i < entities.length; i++) {
     NodeSet.push([entities[i].lat, entities[i].lng]);
   }
-  for (var i = 0; i < data.documents.length / 4; i++) {
-    //insert bubbleset here
-    //each coord should be a node in the
-    //////////////////////////////////////////////////////////////
-    ///////////this needs its own function///////////////////////
-    var coordRects = getBubbleSetCoords(data.documents[i].links);
-    polyLineNodes = calculateBubbleSet(
-      NodeSet,
-      coordRects,
-      projection,
-      bubbleSetPadding
-    );
-    //draw outline of bubbleset
-    var tmpPolyline = new google.maps.Polygon({
-      path: polyLineNodes,
-      strokeColor: "#000000",
-      strokeOpacity: 0.5,
-      strokeWeight: bubbleSetOutlineThickness,
-      fillColor: color_scale(i % 23),
-      fillOpacity: bubbleSetOpacity
-    });
-    polylines.push(tmpPolyline);
-    //drawLineNodesStraight(data, i, getCoords(data.documents[i].links));
+  for (var i = 0; i < links.length; i++) {
+    test.push(getBubbleSetCoords(links[i]));
   }
-
+  calculateBubbleSetAsync(NodeSet, test, projection);
   // Bind polylines to the map
   for (var i = 0; i < polylines.length; i++) {
     polylines[i].setMap(map);
@@ -371,6 +360,86 @@ function updateDataBeforeMapLoad(data) {
 function updateData(data) {
   myData = data;
 }
+
+function checkForDuplicates(data) {
+  let collisionMap = new Map();
+  for (var i = 0; i < data.length; i++) {
+    if (collisionMap.has(`${data[i].links}`)) {
+      collisionMap.set(
+        `${data[i].links}`,
+        collisionMap.get(`${data[i].links}`) + 1
+      );
+      continue;
+    }
+    collisionMap.set(`${data[i].links}`, 1);
+  }
+  collisionFreeLinks = [];
+  collisionMap.forEach((value, key) => {
+    values = key.split(",");
+    tmp = [];
+    for (var i = 0; i < values.length; i++) {
+      tmp.push(parseInt(values[i]));
+    }
+    collisionFreeLinks.push(tmp);
+  });
+  return collisionFreeLinks;
+}
+async function doWork(targetSet, diffSet) {
+  for (var i = 0; i < maxWorkers; i++) {
+    var worker = new Worker("../js/worker.js");
+    worker.onmessage = onMessage;
+    worker.postMessage({
+      targetSet: targetSet,
+      diffSet: diffSet,
+      thread_id: i
+    });
+  }
+  await wait();
+}
+
+function wait() {
+  return new Promise(resolve => {
+    console.log(sets.length);
+    if (sets.length == links.length) {
+      resolve();
+    }
+  });
+}
+function onMessage(event) {
+  var worker = this;
+  event.data.forEach(x => {
+    tmp = [];
+    x.forEach(d => {
+      let coords = projection.fromContainerPixelToLatLng(
+        new google.maps.Point(d[0], d[1])
+      );
+      tmp.push({ lat: coords.lat(), lng: coords.lng() });
+    });
+    sets.push(tmp);
+  });
+
+  worker.terminate();
+  if (sets.length == links.length) {
+    renderSets();
+  }
+}
+function renderSets() {
+  for (var i = 0; i < sets.length; i++) {
+    polygons.push(
+      new google.maps.Polygon({
+        path: sets[i],
+        strokeColor: "#000000",
+        strokeOpacity: 0.5,
+        strokeWeight: bubbleSetOutlineThickness,
+        fillColor: color_scale(i % 23),
+        fillOpacity: bubbleSetOpacity
+      })
+    );
+    polygons[polygons.length - 1].setMap(map);
+  }
+  console.timeLog("async");
+}
+//transforms markers from lat,lng to pixels based on the maps projection
 function transform(d) {
   node_coord[d.entityid] = [d.lat, d.lng];
   d = new google.maps.LatLng(d.lat, d.lng);
@@ -381,12 +450,31 @@ function transform(d) {
     .style("top", d.y - padding + "px")
     .style("z-index", 99);
 }
+function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
+  projectedCompleteSet = [];
+  projectedTargetSets = [];
+  completeNodeSet.forEach(d => {
+    let tmp = projection.fromLatLngToContainerPixel(
+      new google.maps.LatLng(d[0], d[1])
+    );
+    projectedCompleteSet.push({ x: tmp.x, y: tmp.y, width: 10, height: 10 });
+  });
 
-function clearOverlays() {
-  for (var i = 0; i < overlays.length; i++) {
-    overlays[i].setMap(null);
-  }
+  targetSets.forEach(x => {
+    tmp = [];
+    x.forEach(d => {
+      projTmp = projection.fromLatLngToContainerPixel(
+        new google.maps.LatLng(d[0], d[1])
+      );
+      tmp.push({ x: projTmp.x, y: projTmp.y, width: 10, height: 10 });
+    });
+    projectedTargetSets.push(tmp);
+  });
+  doWork(projectedTargetSets, projectedCompleteSet);
 }
+//calculates bubbleset first param is the complete node set, the target set is the grouping of nodes the bubbleset is calculating
+//projection is the current projection of the map
+//padding is the padding between each node
 function calculateBubbleSet(completeNodeSet, targetSet, projection, padding) {
   let diff = completeNodeSet.filter(x => {
     return !targetSet.includes(x);
@@ -412,12 +500,13 @@ function calculateBubbleSet(completeNodeSet, targetSet, projection, padding) {
       height: 10
     });
   });
-
+  //doWork(setRects, diffRects);
   var list = bubbleset.createOutline(
     BubbleSet.addPadding(setRects, padding),
     BubbleSet.addPadding(diffRects, padding),
     null
   );
+
   var outline = new PointPath(list).transform([
     new ShapeSimplifier(0.0),
     new BSplineShapeGenerator(),
@@ -434,6 +523,7 @@ function calculateBubbleSet(completeNodeSet, targetSet, projection, padding) {
   });
   return polyLineNodes;
 }
+//gets the lat, Lat based on entityID in array format [lat,lng]
 function getBubbleSetCoords(links) {
   let bubSet = [];
   for (var i = 0; i < links.length; i++) {
@@ -442,6 +532,7 @@ function getBubbleSetCoords(links) {
   }
   return bubSet;
 }
+//gets the lat, lng based on entityID in object format [{lat:,lng:}]
 function getCoords(links) {
   var coords = [];
   for (var i = 0; i < links.length; i++) {
@@ -452,6 +543,7 @@ function getCoords(links) {
   }
   return coords;
 }
+//draws between the nodes in an arch
 function drawLineNodes(data, i, coords) {
   if (data.documents[i].links.length < 3) {
     var polyline = new google.maps.Polygon({
@@ -474,6 +566,7 @@ function drawLineNodes(data, i, coords) {
     polygons.push(polygon);
   }
 }
+//draws a line between the nodes in a straight line
 function drawLineNodesStraight(data, i) {
   var coords = getGoogleCoords(data.documents[i].links);
   if (data.documents[i].links.length < 3) {
@@ -523,6 +616,7 @@ function drawOverlay() {
     polylines[i].setMap(map);
   }
 }
+//defines 5 points between to geo-location which is used to create a straight line
 function getGoogleCoords(links) {
   var geo_data = [];
   if (links.length > 1) {
