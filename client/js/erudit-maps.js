@@ -175,6 +175,7 @@ var polygons = new Map();
 var setsToRender = [];
 var keyMap = new Map();
 var sets = new Map();
+var filters = [];
 var links;
 var bubbleset = new BubbleSet();
 //web worker max number the hardware supports
@@ -209,7 +210,6 @@ function onLoad() {
     updateDataFunction = updateData;
     updateMapFunction = updateMap;
     overlay.draw = drawOverlay;
-    //createQuadTree(Object.values(myData.entities));
     console.log("tilesloaded");
     links = checkForDuplicates(myData.documents);
     buildKeyMap(links);
@@ -323,19 +323,17 @@ function updateMap(data) {
   var NodeSet = [];
   var entities = Object.values(data.entities);
   var targetSets = [];
+  filters = [];
   console.time("async");
   for (var i = 0; i < entities.length; i++) {
     NodeSet.push([entities[i].lat, entities[i].lng]);
+    filters.push(entities[i].entityid);
   }
   for (var i = 0; i < links.length; i++) {
     targetSets.push(getBubbleSetCoords(links[i]));
   }
   calculateBubbleSetAsync(NodeSet, targetSets, projection);
-
-  // Bind polygons to the map
-  for (var i = 0; i < polygons.length; i++) {
-    polygons[i].setMap(map);
-  }
+  updateMapFunction = applyFilteredData;
 }
 //create quad tree of data used to calculate the neighbours for the bubbleSet later.
 function createQuadTree(entities) {
@@ -433,9 +431,97 @@ function onMessage(event) {
     initialRender();
   }
 }
+
+function applyFilteredData(data) {
+  overlay.layer.selectAll("svg").remove();
+  var marker = overlay.layer
+    .selectAll("svg")
+    .data(d3.values(data.entities))
+    .each(transform) // update existing markers
+    .enter()
+    .append("svg")
+    .each(transform)
+    .attr("class", "marker")
+    .attr("doc-id", function(d) {
+      return d.entityid;
+    })
+    .attr("journal-id", function(d) {
+      return d.entityid;
+    })
+    .on("mouseover", function(d) {
+      d3.select(this)
+        .selectAll("circle")
+        .attr("r", 9)
+        .attr("fill", "rgba(63, 184, 175, 0.8)")
+        .style("stroke", "rgba(63, 184, 175, 1)");
+      var keys = keyMap.get(d.entityid);
+      setsToRender.push(keys);
+      renderRequestedSets();
+      console.log(`${d.entityid}, ${keys}, ${keyMap}`);
+    })
+    .on("mouseout", function(d) {
+      d3.select(this)
+        .selectAll("circle")
+        .attr("r", 4.5)
+        .attr("fill", rgb_highlight(d.entityid))
+        .style("stroke", rgb_highlight);
+      renderAppliedFilter();
+    })
+    .on("click", function(d) {
+      openDocumentsBar(d.entityid, d.affiliation);
+    });
+
+  //// Add a circle.
+  marker
+    .append("circle")
+    .attr("r", 4.5)
+    .attr("cx", padding)
+    .attr("cy", padding)
+    .attr("fill", function(d) {
+      return rgb_highlight(d.entityid);
+    })
+    .attr("stroke", function(d) {
+      if (rgb_highlight(d.entityid) != rgb_default) {
+        return "#000";
+      } else {
+        return rgb_stroke;
+      }
+    });
+
+  $("svg circle").tipsy({
+    gravity: "w",
+    html: true,
+    title: function() {
+      var d = this.__data__;
+      return d.affiliation;
+    }
+  });
+
+  $("svg circle").mousemove(function(event) {
+    $(".tipsy").css("left", event.pageX + 16 + "px");
+    $(".tipsy").css("top", event.pageY - 16 + "px");
+  });
+  polygons.forEach(d => {
+    d.setMap(null);
+  });
+  var entities = Object.values(data.entities);
+  filters = [];
+  console.log(entities);
+  console.log(data.documents);
+  for (var i = 0; i < entities.length; i++) {
+    filters.push(entities[i].entityid);
+  }
+  links = checkForDuplicates(data.documents);
+  keyMap.clear();
+  buildKeyMap(links);
+  renderAppliedFilter();
+}
 function renderAppliedFilter() {
-  polygons.forEach((value, key) => {
-    value.setMap(map);
+  filters.forEach(d => {
+    const keys = keyMap.get(d);
+    keys.forEach(x => {
+      polygons.get(x.toString()).setMap(map);
+    });
   });
 }
 function renderRequestedSets() {
@@ -444,7 +530,6 @@ function renderRequestedSets() {
   });
   for (var i = 0; i < setsToRender.length; i++) {
     for (var j = 0; j < setsToRender[i].length; j++) {
-      console.log(setsToRender[i][j].toString());
       if (polygons.has(setsToRender[i][j].toString())) {
         polygons.get(setsToRender[i][j].toString()).setMap(map);
       }
