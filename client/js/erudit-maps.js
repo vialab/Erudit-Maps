@@ -2,7 +2,7 @@ var $map = $("#map");
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 3,
+  zoom: 2,
   center: new google.maps.LatLng(55, -72),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   mapTypeControl: false,
@@ -173,6 +173,7 @@ var color_scale = d3.scale.ordinal().range(colors);
 var node_coord = {};
 var polygons = [];
 var polylines = [];
+var keyMap = new Map();
 var sets = [];
 var links;
 var bubbleset = new BubbleSet();
@@ -193,6 +194,7 @@ var bubbleSetPadding = 0;
 var bubbleSetOpacity = 0.35;
 var myData = null;
 var quadTree;
+var lastZoom = 4;
 //function callbacks based on if the map is loaded or not
 var updateDataFunction = updateDataBeforeMapLoad;
 //do nothing until map is loaded
@@ -210,10 +212,10 @@ function onLoad() {
     //createQuadTree(Object.values(myData.entities));
     console.log("tilesloaded");
     links = checkForDuplicates(myData.documents);
+    buildKeyMap(links);
     update(myData);
     google.maps.event.removeListener(loadListener);
   });
-  console.log(loadListener);
   overlay = new google.maps.OverlayView();
   overlay.onAdd = function() {
     overlay.layer = d3
@@ -228,6 +230,8 @@ function onLoad() {
     svg = layer.append("svg");
     adminDivisions = svg.append("g").attr("class", "AdminDivisions");
     projection = this.getProjection();
+    console.log(projection);
+    console.log(map.getZoom());
     overlay.draw = function() {};
     // Bind our overlay to the map
     overlay.onRemove = function() {
@@ -313,17 +317,15 @@ function updateMap(data) {
 
   var NodeSet = [];
   var entities = Object.values(data.entities);
-  var test = [];
-  console.log(entities);
-  console.log(data.documents);
+  var targetSets = [];
   console.time("async");
   for (var i = 0; i < entities.length; i++) {
     NodeSet.push([entities[i].lat, entities[i].lng]);
   }
   for (var i = 0; i < links.length; i++) {
-    test.push(getBubbleSetCoords(links[i]));
+    targetSets.push(getBubbleSetCoords(links[i]));
   }
-  calculateBubbleSetAsync(NodeSet, test, projection);
+  calculateBubbleSetAsync(NodeSet, targetSets, projection);
   // Bind polylines to the map
   for (var i = 0; i < polylines.length; i++) {
     polylines[i].setMap(map);
@@ -360,6 +362,19 @@ function updateDataBeforeMapLoad(data) {
 function updateData(data) {
   myData = data;
 }
+//builds key map that is used for the onHover only display the sets relative to this node
+function buildKeyMap(links) {
+  for (var i = 0; i < links.length; i++) {
+    for (var j = 0; j < links[i].length; j++) {
+      if (keyMap.has(links[i][j])) {
+        keyMap.get(links[i][j]).push(links[i]);
+      } else {
+        keyMap.set(links[i][j], []);
+        keyMap.get(links[i][j]).push(links[i]);
+      }
+    }
+  }
+}
 
 function checkForDuplicates(data) {
   let collisionMap = new Map();
@@ -391,25 +406,18 @@ async function doWork(targetSet, diffSet) {
     worker.postMessage({
       targetSet: targetSet,
       diffSet: diffSet,
-      thread_id: i
+      thread_id: i,
+      ids: links
     });
   }
-  await wait();
 }
 
-function wait() {
-  return new Promise(resolve => {
-    console.log(sets.length);
-    if (sets.length == links.length) {
-      resolve();
-    }
-  });
-}
 function onMessage(event) {
   var worker = this;
-  event.data.forEach(x => {
+  console.log(event.data);
+  event.data.forEach((value, key) => {
     tmp = [];
-    x.forEach(d => {
+    value.forEach(d => {
       let coords = projection.fromContainerPixelToLatLng(
         new google.maps.Point(d[0], d[1])
       );
@@ -423,7 +431,9 @@ function onMessage(event) {
     renderSets();
   }
 }
+
 function renderSets() {
+  console.log(map.getZoom());
   for (var i = 0; i < sets.length; i++) {
     polygons.push(
       new google.maps.Polygon({
@@ -438,6 +448,23 @@ function renderSets() {
     polygons[polygons.length - 1].setMap(map);
   }
   console.timeLog("async");
+}
+//https://developers.google.com/maps/documentation/javascript/examples/map-coordinates
+function project(latLng) {
+  const SCALE = 1 >> lastZoom;
+  const TILE_SIZE = 256;
+  var siny = Math.sin((latLng.lat() * Math.PI) / 180);
+
+  // Truncating to 0.9999 effectively limits latitude to 89.189. This is
+  // about a third of a tile past the edge of the world tile.
+  siny = Math.min(Math.max(siny, -0.9999), 0.9999);
+
+  return new google.maps.Point(
+    TILE_SIZE * (0.5 + latLng.lng() / 360) * SCALE,
+    TILE_SIZE *
+      (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)) *
+      SCALE
+  );
 }
 //transforms markers from lat,lng to pixels based on the maps projection
 function transform(d) {

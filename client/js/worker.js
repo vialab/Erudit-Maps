@@ -3,6 +3,7 @@ importScripts("../js/bubblesets.js");
 onmessage = e => {
   let bubbleSet = new BubbleSet();
   result = [];
+  keyList = [];
   if (e.data.thread_id < 3) {
     for (
       var i = Math.floor(e.data.targetSet.length / 4) * e.data.thread_id;
@@ -26,6 +27,13 @@ onmessage = e => {
         new BSplineShapeGenerator(),
         new ShapeSimplifier(0.0)
       ]);
+      //create key
+      key = "";
+      for (var j = 0; j < e.data.ids[i].length; j++) {
+        key += `${e.data.ids[i][j]},`;
+      }
+      key = key.slice(0, -1);
+      keyList.push(key);
       result.push(outline);
     }
   } else {
@@ -47,17 +55,32 @@ onmessage = e => {
         new BSplineShapeGenerator(),
         new ShapeSimplifier(0.0)
       ]);
+      //create key
+      key = "";
+      for (var j = 0; j < e.data.ids[i].length; j++) {
+        key += `${e.data.ids[i][j]},`;
+      }
+      key = key.slice(0, -1);
+      keyList.push(key);
       result.push(outline);
     }
   }
-  polyLines = [];
-  result.forEach(x => {
+  //console.log(keyList);
+  polyLines = new Map();
+  for (var i = 0; i < result.length; i++) {
     tmpOutline = [];
-    x.forEach(d => {
+    result[i].forEach(d => {
       tmpOutline.push([d[0], d[1]]);
     });
-    polyLines.push(tmpOutline);
-  });
+    polyLines.set(keyList[i], tmpOutline);
+  }
+  //result.forEach(x => {
+  //  tmpOutline = [];
+  //  x.forEach(d => {
+  //    tmpOutline.push([d[0], d[1]]);
+  //  });
+  //  polyLines.push(tmpOutline);
+  //});
   console.log(`[worked thread ${e.data.thread_id}]: finished`);
   postMessage(polyLines);
 };
