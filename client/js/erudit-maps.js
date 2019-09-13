@@ -171,10 +171,10 @@ var colors = [
 ];
 var color_scale = d3.scale.ordinal().range(colors);
 var node_coord = {};
-var polygons = [];
-var polylines = [];
+var polygons = new Map();
+var setsToRender = [];
 var keyMap = new Map();
-var sets = [];
+var sets = new Map();
 var links;
 var bubbleset = new BubbleSet();
 //web worker max number the hardware supports
@@ -269,6 +269,10 @@ function updateMap(data) {
         .attr("r", 9)
         .attr("fill", "rgba(63, 184, 175, 0.8)")
         .style("stroke", "rgba(63, 184, 175, 1)");
+      var keys = keyMap.get(d.entityid);
+      setsToRender.push(keys);
+      renderRequestedSets();
+      console.log(`${d.entityid}, ${keys}, ${keyMap}`);
     })
     .on("mouseout", function(d) {
       d3.select(this)
@@ -276,6 +280,7 @@ function updateMap(data) {
         .attr("r", 4.5)
         .attr("fill", rgb_highlight(d.entityid))
         .style("stroke", rgb_highlight);
+      renderAppliedFilter();
     })
     .on("click", function(d) {
       openDocumentsBar(d.entityid, d.affiliation);
@@ -326,10 +331,7 @@ function updateMap(data) {
     targetSets.push(getBubbleSetCoords(links[i]));
   }
   calculateBubbleSetAsync(NodeSet, targetSets, projection);
-  // Bind polylines to the map
-  for (var i = 0; i < polylines.length; i++) {
-    polylines[i].setMap(map);
-  }
+
   // Bind polygons to the map
   for (var i = 0; i < polygons.length; i++) {
     polygons[i].setMap(map);
@@ -423,30 +425,49 @@ function onMessage(event) {
       );
       tmp.push({ lat: coords.lat(), lng: coords.lng() });
     });
-    sets.push(tmp);
+    sets.set(key, tmp);
   });
 
   worker.terminate();
-  if (sets.length == links.length) {
-    renderSets();
+  if (sets.size == links.length) {
+    initialRender();
   }
 }
+function renderAppliedFilter() {
+  polygons.forEach((value, key) => {
+    value.setMap(map);
+  });
+}
+function renderRequestedSets() {
+  polygons.forEach((value, key) => {
+    value.setMap(null);
+  });
+  for (var i = 0; i < setsToRender.length; i++) {
+    for (var j = 0; j < setsToRender[i].length; j++) {
+      console.log(setsToRender[i][j].toString());
+      if (polygons.has(setsToRender[i][j].toString())) {
+        polygons.get(setsToRender[i][j].toString()).setMap(map);
+      }
+    }
+  }
+  setsToRender = [];
+}
 
-function renderSets() {
-  console.log(map.getZoom());
-  for (var i = 0; i < sets.length; i++) {
-    polygons.push(
+function initialRender() {
+  sets.forEach((value, key) => {
+    polygons.set(
+      key,
       new google.maps.Polygon({
-        path: sets[i],
+        path: value,
         strokeColor: "#000000",
         strokeOpacity: 0.5,
         strokeWeight: bubbleSetOutlineThickness,
-        fillColor: color_scale(i % 23),
+        fillColor: color_scale(Math.random(0, 100) % 23),
         fillOpacity: bubbleSetOpacity
       })
     );
-    polygons[polygons.length - 1].setMap(map);
-  }
+    polygons.get(key).setMap(map);
+  });
   console.timeLog("async");
 }
 //https://developers.google.com/maps/documentation/javascript/examples/map-coordinates
@@ -527,7 +548,6 @@ function calculateBubbleSet(completeNodeSet, targetSet, projection, padding) {
       height: 10
     });
   });
-  //doWork(setRects, diffRects);
   var list = bubbleset.createOutline(
     BubbleSet.addPadding(setRects, padding),
     BubbleSet.addPadding(diffRects, padding),
@@ -623,9 +643,9 @@ function emptyMap() {
   while (polygons.length > 0) {
     polygons.pop().setMap(null);
   }
-  while (polylines.length > 0) {
-    polylines.pop().setMap(null);
-  }
+  //while (polylines.length > 0) {
+  //  polylines.pop().setMap(null);
+  //}
 }
 //draw functions for map -- might not have to clear overlays we will see
 function drawOverlay() {
@@ -638,9 +658,6 @@ function drawOverlay() {
 
   for (var i = 0; i < polygons.length; i++) {
     polygons[i].setMap(map);
-  }
-  for (var i = 0; i < polylines.length; i++) {
-    polylines[i].setMap(map);
   }
 }
 //defines 5 points between to geo-location which is used to create a straight line
@@ -683,7 +700,6 @@ function getGoogleCoords(links) {
       new google.maps.LatLng(node_coord[links[i]][0], node_coord[links[i]][1])
     );
   }
-  // geo_data.push(geo_data[0]);
   return geo_data;
 }
 
