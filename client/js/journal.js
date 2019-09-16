@@ -151,7 +151,8 @@ function applyFilters(update_selected) {
   // start by filtering by journal
   var min_year = $("select[name='start-year']").val();
   var max_year = $("select[name='end-year']").val();
-  filter_data = filterDate(map_data, true);
+  filter_data = filterSetSize(map_data, true);
+  filter_data = filterDate(filter_data, true);
   filter_data = filterTitle(filter_data, true);
   filter_data = filterJournals(filter_data, true);
   drawJournalList();
@@ -334,6 +335,7 @@ function drawAuthorList() {
 
   $("#author-list").append(html);
 }
+
 function extractJournalEntity(documents) {
   for (var i = 0; i < documents.length; i++) {
     var jid = documents[i].journalid;
@@ -346,6 +348,7 @@ function extractJournalEntity(documents) {
       journal_entity_map[jid] = [eid];
     }
     var links = documents[i].links;
+
     for (var j in links) {
       if (!entity_map[eid]) {
         entity_map[eid] = [];
@@ -358,15 +361,36 @@ function extractJournalEntity(documents) {
 }
 
 function extractDateRange(documents) {
+  var maxSet = documents[0].links.length;
+  var minSet = documents[0].links.length;
   var min_year = 9999;
   var max_year = 0;
   for (var i = 0; i < documents.length; i++) {
+    maxSet = Math.max(maxSet, documents[i].links.length);
+    minSet = Math.min(minSet, documents[i].links.length);
     if (documents[i].year < min_year) min_year = documents[i].year;
     if (documents[i].year > max_year) max_year = documents[i].year;
   }
+  populateSetSizeRange(minSet, maxSet);
   populateDateRange(min_year, max_year);
+  $("#filter-set-size")[0].noUiSlider.on("update", function() {
+    applyFilters(false);
+  });
   $("select[name='start-year'], select[name='end-year']").change(function() {
     applyFilters(false);
+  });
+}
+function populateSetSizeRange(min, max) {
+  var slider = $("#filter-set-size")[0];
+  noUiSlider.create(slider, {
+    start: [min, max],
+    connect: true,
+    step: 1,
+    range: {
+      min: min,
+      max: max
+    },
+    tooltips: [wNumb({ decimals: 0 }), wNumb({ decimals: 0 })]
   });
 }
 
@@ -384,6 +408,25 @@ function populateDateRange(min, max) {
   $("#filter-date")[0].noUiSlider.on("update", function() {
     applyFilters(false);
   });
+}
+function filterSetSize(data, queued) {
+  var values = $("#filter-set-size")[0].noUiSlider.get();
+  var minSet = parseInt(values[0]);
+  var maxSet = parseInt(values[1]);
+  entity_list = [];
+  var documents = data.documents.filter(function(n) {
+    if (n.links.length >= minSet && n.links.length <= maxSet) {
+      if ($.inArray(n.entityid, entity_list) == -1) {
+        entity_list.push(n.entityid);
+      }
+      return true;
+    }
+    return false;
+  });
+  var entities = getEntityList(documents);
+  var new_data = { documents: documents, entities: entities };
+  if (queued) return new_data;
+  update(new_data);
 }
 
 function filterDate(data, queued) {

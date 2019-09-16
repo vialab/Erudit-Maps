@@ -43,7 +43,7 @@
     <!-- Custom styles for this template -->
     <link href="css/tipsy.css" rel="stylesheet" />
     <link href="css/main.min.css" rel="stylesheet" />
-    <link href="css/erudit-maps.min.css" rel="stylesheet" />
+    <link href="css/erudit-maps.css" rel="stylesheet" />
     <link href="css/nouislider.min.css" rel="stylesheet" />
   </head>
 
@@ -121,6 +121,17 @@
                 type="text"
                 placeholder="Type a keyword"
               />
+            </div>
+          </div>
+        </div>
+        <div
+          class="shadow card filter-widget transition"
+          style="display: none;"
+        >
+          <div class="content">
+            <div class="tool-box-widget" id="set-size">
+              <h2>Set Size Filter</h2>
+              <div id="filter-set-size" class="nouislider"></div>
             </div>
           </div>
         </div>
@@ -221,7 +232,7 @@
     <!--key=AIzaSyBwRHzid2fvKFJ5mzbOwC966PK1KcHWQms-->!>
     <script src="https://d3js.org/d3.v3.js"></script>
     <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
-    <script src="js/journal.min.js"></script>
+    <script src="js/journal.js"></script>
     <script src="js/bubblesets.js"></script>
     <script src="js/erudit-maps.js" onload="onLoad()"></script>
   </body>

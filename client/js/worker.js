@@ -2,6 +2,7 @@ importScripts("../js/bubblesets.js");
 //e parameter has this contained: e.data.data, e.data.nodeCoords, e.data.projection, e.data.thread_id
 onmessage = e => {
   let bubbleSet = new BubbleSet();
+  let bubbleSetPadding = 1;
   result = [];
   keyList = [];
   if (e.data.thread_id < 3) {
@@ -15,10 +16,13 @@ onmessage = e => {
       let diffSet = e.data.diffSet.filter(x => {
         return !e.data.targetSet[i].includes(x);
       });
+      console.log(
+        `${diffSet.length}, ${e.data.targetSet[i].length}, ${e.data.diffSet.length}`
+      );
       //create the outline
       var list = bubbleSet.createOutline(
-        BubbleSet.addPadding(e.data.targetSet[i], 10),
-        BubbleSet.addPadding(diffSet, 10),
+        BubbleSet.addPadding(e.data.targetSet[i], bubbleSetPadding),
+        BubbleSet.addPadding(diffSet, bubbleSetPadding),
         null
       );
       //calculate the list
@@ -46,8 +50,8 @@ onmessage = e => {
         return !e.data.targetSet[i].includes(x);
       });
       var list = bubbleSet.createOutline(
-        BubbleSet.addPadding(e.data.targetSet[i], 10),
-        BubbleSet.addPadding(diffSet, 10),
+        BubbleSet.addPadding(e.data.targetSet[i], bubbleSetPadding),
+        BubbleSet.addPadding(diffSet, bubbleSetPadding),
         null
       );
       var outline = new PointPath(list).transform([
@@ -65,7 +69,7 @@ onmessage = e => {
       result.push(outline);
     }
   }
-  //console.log(keyList);
+
   polyLines = new Map();
   for (var i = 0; i < result.length; i++) {
     tmpOutline = [];
@@ -74,13 +78,6 @@ onmessage = e => {
     });
     polyLines.set(keyList[i], tmpOutline);
   }
-  //result.forEach(x => {
-  //  tmpOutline = [];
-  //  x.forEach(d => {
-  //    tmpOutline.push([d[0], d[1]]);
-  //  });
-  //  polyLines.push(tmpOutline);
-  //});
   console.log(`[worked thread ${e.data.thread_id}]: finished`);
   postMessage(polyLines);
 };

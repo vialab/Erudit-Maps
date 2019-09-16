@@ -2,7 +2,7 @@ var $map = $("#map");
 
 // Create the Google Map…
 var map = new google.maps.Map(d3.select("#map").node(), {
-  zoom: 2,
+  zoom: 3,
   center: new google.maps.LatLng(55, -72),
   mapTypeId: google.maps.MapTypeId.ROADMAP,
   mapTypeControl: false,
@@ -118,10 +118,10 @@ var map = new google.maps.Map(d3.select("#map").node(), {
           hue: "#ffff00"
         },
         {
-          lightness: -25
+          lightness: 30
         },
         {
-          saturation: -97
+          saturation: -100
         }
       ]
     },
@@ -187,17 +187,17 @@ var overlay;
 var layer;
 var svg;
 var adminDivisions;
-var projection;
 var padding = 10;
 //bubbleset values
 var bubbleSetOutlineThickness = 1;
 var bubbleSetPadding = 0;
 var bubbleSetOpacity = 0.35;
+var nodeSize = 9;
 var myData = null;
 var quadTree;
 var lastZoom = 4;
 //function callbacks based on if the map is loaded or not
-var updateDataFunction = updateDataBeforeMapLoad;
+var updateDataFunction = updateData;
 //do nothing until map is loaded
 var updateMapFunction = function(data) {};
 //map listener used once for loading
@@ -207,7 +207,7 @@ var loadListener;
 //this should also bind all of the overlay functions
 function onLoad() {
   loadListener = map.addListener("tilesloaded", () => {
-    updateDataFunction = updateData;
+    //updateDataFunction = updateData;
     updateMapFunction = updateMap;
     overlay.draw = drawOverlay;
     console.log("tilesloaded");
@@ -230,8 +230,6 @@ function onLoad() {
     svg = layer.append("svg");
     adminDivisions = svg.append("g").attr("class", "AdminDivisions");
     projection = this.getProjection();
-    console.log(projection);
-    console.log(map.getZoom());
     overlay.draw = function() {};
     // Bind our overlay to the map
     overlay.onRemove = function() {
@@ -270,9 +268,19 @@ function updateMap(data) {
         .attr("fill", "rgba(63, 184, 175, 0.8)")
         .style("stroke", "rgba(63, 184, 175, 1)");
       var keys = keyMap.get(d.entityid);
+      for (var i = 0; i < keys.length; i++) {
+        for (var j = 0; j < keys[i].length; j++) {
+          let key = keys[i][j];
+          overlay.layer
+            .select(`[doc-id="${key}"]`)
+            .select("circle")
+            .attr("r", 9)
+            .attr("fill", "rgba(63, 184, 175, 0.8)")
+            .style("stroke", "rgba(63, 184, 175, 1)");
+        }
+      }
       setsToRender.push(keys);
       renderRequestedSets();
-      console.log(`${d.entityid}, ${keys}, ${keyMap}`);
     })
     .on("mouseout", function(d) {
       d3.select(this)
@@ -280,6 +288,18 @@ function updateMap(data) {
         .attr("r", 4.5)
         .attr("fill", rgb_highlight(d.entityid))
         .style("stroke", rgb_highlight);
+      var keys = keyMap.get(d.entityid);
+      for (var i = 0; i < keys.length; i++) {
+        for (var j = 0; j < keys[i].length; j++) {
+          let key = keys[i][j];
+          overlay.layer
+            .select(`[doc-id="${key}"]`)
+            .selectAll("circle")
+            .attr("r", 4.5)
+            .attr("fill", rgb_highlight(key))
+            .style("stroke", rgb_highlight);
+        }
+      }
       renderAppliedFilter();
     })
     .on("click", function(d) {
@@ -399,6 +419,7 @@ function checkForDuplicates(data) {
   });
   return collisionFreeLinks;
 }
+
 async function doWork(targetSet, diffSet) {
   for (var i = 0; i < maxWorkers; i++) {
     var worker = new Worker("../js/worker.js");
@@ -414,7 +435,6 @@ async function doWork(targetSet, diffSet) {
 
 function onMessage(event) {
   var worker = this;
-  console.log(event.data);
   event.data.forEach((value, key) => {
     tmp = [];
     value.forEach(d => {
@@ -455,9 +475,20 @@ function applyFilteredData(data) {
         .attr("fill", "rgba(63, 184, 175, 0.8)")
         .style("stroke", "rgba(63, 184, 175, 1)");
       var keys = keyMap.get(d.entityid);
+      for (var i = 0; i < keys.length; i++) {
+        for (var j = 0; j < keys[i].length; j++) {
+          let key = keys[i][j];
+          overlay.layer
+            .select(`[doc-id="${key}"]`)
+            .select("circle")
+            .attr("r", 9)
+            .attr("fill", "rgba(63, 184, 175, 0.8)")
+            .style("stroke", "rgba(63, 184, 175, 1)");
+        }
+      }
+      console.log("over");
       setsToRender.push(keys);
       renderRequestedSets();
-      console.log(`${d.entityid}, ${keys}, ${keyMap}`);
     })
     .on("mouseout", function(d) {
       d3.select(this)
@@ -465,6 +496,18 @@ function applyFilteredData(data) {
         .attr("r", 4.5)
         .attr("fill", rgb_highlight(d.entityid))
         .style("stroke", rgb_highlight);
+      var keys = keyMap.get(d.entityid);
+      for (var i = 0; i < keys.length; i++) {
+        for (var j = 0; j < keys[i].length; j++) {
+          let key = keys[i][j];
+          overlay.layer
+            .select(`[doc-id="${key}"]`)
+            .selectAll("circle")
+            .attr("r", 4.5)
+            .attr("fill", rgb_highlight(key))
+            .style("stroke", rgb_highlight);
+        }
+      }
       renderAppliedFilter();
     })
     .on("click", function(d) {
@@ -506,8 +549,6 @@ function applyFilteredData(data) {
   });
   var entities = Object.values(data.entities);
   filters = [];
-  console.log(entities);
-  console.log(data.documents);
   for (var i = 0; i < entities.length; i++) {
     filters.push(entities[i].entityid);
   }
@@ -517,12 +558,14 @@ function applyFilteredData(data) {
   renderAppliedFilter();
 }
 function renderAppliedFilter() {
-  filters.forEach(d => {
-    const keys = keyMap.get(d);
-    keys.forEach(x => {
-      polygons.get(x.toString()).setMap(map);
-    });
-  });
+  for (var i = 0; i < filters.length; i++) {
+    if (keyMap.has(filters[i])) {
+      const keys = keyMap.get(filters[i]);
+      for (var j = 0; j < keys.length; j++) {
+        polygons.get(keys[j].toString()).setMap(map);
+      }
+    }
+  }
 }
 function renderRequestedSets() {
   polygons.forEach((value, key) => {
@@ -537,7 +580,6 @@ function renderRequestedSets() {
   }
   setsToRender = [];
 }
-
 function initialRender() {
   sets.forEach((value, key) => {
     polygons.set(
@@ -590,7 +632,12 @@ function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
     let tmp = projection.fromLatLngToContainerPixel(
       new google.maps.LatLng(d[0], d[1])
     );
-    projectedCompleteSet.push({ x: tmp.x, y: tmp.y, width: 10, height: 10 });
+    projectedCompleteSet.push({
+      x: tmp.x,
+      y: tmp.y,
+      width: nodeSize,
+      height: nodeSize
+    });
   });
 
   targetSets.forEach(x => {
@@ -599,7 +646,12 @@ function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
       projTmp = projection.fromLatLngToContainerPixel(
         new google.maps.LatLng(d[0], d[1])
       );
-      tmp.push({ x: projTmp.x, y: projTmp.y, width: 10, height: 10 });
+      tmp.push({
+        x: projTmp.x,
+        y: projTmp.y,
+        width: nodeSize,
+        height: nodeSize
+      });
     });
     projectedTargetSets.push(tmp);
   });
@@ -1007,9 +1059,6 @@ $(document).ready(function() {
     extractJournalEntity(map_data.documents);
     author_data = extractAuthorList(map_data.documents);
     drawAuthorList();
-    // update(map_data);
     applyFilters(false);
-    // closeSideBar();
-    // filterJournals();
   });
 });
