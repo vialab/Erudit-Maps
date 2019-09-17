@@ -170,6 +170,10 @@ var colors = [
   "#e6afb9"
 ];
 var color_scale = d3.scale.ordinal().range(colors);
+var currentBuffer = 0;
+var renderBuffer = [];
+renderBuffer[0] = new Map();
+renderBuffer[1] = new Map();
 var node_coord = {};
 var polygons = new Map();
 var setsToRender = [];
@@ -195,7 +199,9 @@ var bubbleSetOpacity = 0.35;
 var nodeSize = 9;
 var myData = null;
 var quadTree;
-var lastZoom = 4;
+var zoomWork = null;
+var finished = 0;
+var available = true;
 //function callbacks based on if the map is loaded or not
 var updateDataFunction = updateData;
 //do nothing until map is loaded
@@ -215,6 +221,7 @@ function onLoad() {
     buildKeyMap(links);
     update(myData);
     google.maps.event.removeListener(loadListener);
+    map.addListener("zoom_changed", onZoom);
   });
   overlay = new google.maps.OverlayView();
   overlay.onAdd = function() {
@@ -395,6 +402,10 @@ function buildKeyMap(links) {
     }
   }
 }
+function onZoom() {
+  if (available) {
+  }
+}
 
 function checkForDuplicates(data) {
   let collisionMap = new Map();
@@ -421,6 +432,8 @@ function checkForDuplicates(data) {
 }
 
 async function doWork(targetSet, diffSet) {
+  finished = 0;
+  available = false;
   for (var i = 0; i < maxWorkers; i++) {
     var worker = new Worker("../js/worker.js");
     worker.onmessage = onMessage;
@@ -438,16 +451,17 @@ function onMessage(event) {
   event.data.forEach((value, key) => {
     tmp = [];
     value.forEach(d => {
-      let coords = projection.fromContainerPixelToLatLng(
-        new google.maps.Point(d[0], d[1])
-      );
+      let coords = map
+        .getProjection()
+        .fromPointToLatLng(new google.maps.Point(d[0] / 8, d[1] / 8));
       tmp.push({ lat: coords.lat(), lng: coords.lng() });
     });
     sets.set(key, tmp);
   });
-
+  finished += 1;
   worker.terminate();
-  if (sets.size == links.length) {
+  if (finished == 4) {
+    available = true;
     initialRender();
   }
 }
@@ -486,7 +500,6 @@ function applyFilteredData(data) {
             .style("stroke", "rgba(63, 184, 175, 1)");
         }
       }
-      console.log("over");
       setsToRender.push(keys);
       renderRequestedSets();
     })
@@ -597,9 +610,10 @@ function initialRender() {
   });
   console.timeLog("async");
 }
+
 //https://developers.google.com/maps/documentation/javascript/examples/map-coordinates
-function project(latLng) {
-  const SCALE = 1 >> lastZoom;
+function projectToPixels(latLng) {
+  const SCALE = 1 << map.getZoom();
   const TILE_SIZE = 256;
   var siny = Math.sin((latLng.lat() * Math.PI) / 180);
 
@@ -608,10 +622,8 @@ function project(latLng) {
   siny = Math.min(Math.max(siny, -0.9999), 0.9999);
 
   return new google.maps.Point(
-    TILE_SIZE * (0.5 + latLng.lng() / 360) * SCALE,
-    TILE_SIZE *
-      (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)) *
-      SCALE
+    TILE_SIZE * (0.5 + latLng.lng() / 360),
+    TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))
   );
 }
 //transforms markers from lat,lng to pixels based on the maps projection
@@ -625,13 +637,17 @@ function transform(d) {
     .style("top", d.y - padding + "px")
     .style("z-index", 99);
 }
+
 function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
   projectedCompleteSet = [];
   projectedTargetSets = [];
   completeNodeSet.forEach(d => {
-    let tmp = projection.fromLatLngToContainerPixel(
-      new google.maps.LatLng(d[0], d[1])
-    );
+    //let tmp = projection.fromLatLngToContainerPixel(
+    //  new google.maps.LatLng(d[0], d[1])
+    //);
+    let tmp = projectToPixels(new google.maps.LatLng(d[0], d[1]));
+    tmp.x = tmp.x * 8;
+    tmp.y = tmp.y * 8;
     projectedCompleteSet.push({
       x: tmp.x,
       y: tmp.y,
@@ -643,9 +659,12 @@ function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
   targetSets.forEach(x => {
     tmp = [];
     x.forEach(d => {
-      projTmp = projection.fromLatLngToContainerPixel(
-        new google.maps.LatLng(d[0], d[1])
-      );
+      //projTmp = projection.fromLatLngToContainerPixel(
+      //  new google.maps.LatLng(d[0], d[1])
+      //);
+      let projTmp = projectToPixels(new google.maps.LatLng(d[0], d[1]));
+      projTmp.x = projTmp.x * 8;
+      projTmp.y = projTmp.y * 8;
       tmp.push({
         x: projTmp.x,
         y: projTmp.y,

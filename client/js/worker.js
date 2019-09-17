@@ -14,11 +14,15 @@ onmessage = e => {
       //calculate the difference between the two sets
       //based on the current group
       let diffSet = e.data.diffSet.filter(x => {
-        return !e.data.targetSet[i].includes(x);
+        for (var j = 0; j < e.data.targetSet.length; j++) {
+          if (e.data.targetSet[j].x == x.x && e.data.targetSet[j].y == x.y) {
+            console.log(false);
+            return false;
+          }
+          return true;
+        }
       });
-      console.log(
-        `${diffSet.length}, ${e.data.targetSet[i].length}, ${e.data.diffSet.length}`
-      );
+
       //create the outline
       var list = bubbleSet.createOutline(
         BubbleSet.addPadding(e.data.targetSet[i], bubbleSetPadding),
