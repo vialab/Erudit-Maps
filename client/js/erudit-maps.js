@@ -171,9 +171,8 @@ var colors = [
 ];
 var color_scale = d3.scale.ordinal().range(colors);
 var currentBuffer = 0;
-var renderBuffer = [];
-renderBuffer[0] = new Map();
-renderBuffer[1] = new Map();
+var renderBuffer = new RenderBuffer();
+var jobSystem = new JobTaskSystem();
 var node_coord = {};
 var polygons = new Map();
 var setsToRender = [];
@@ -246,6 +245,7 @@ function onLoad() {
   };
   overlay.setMap(map);
 }
+
 // d3 update map
 function update(data) {
   updateDataFunction(data);
@@ -351,6 +351,8 @@ function updateMap(data) {
   var entities = Object.values(data.entities);
   var targetSets = [];
   filters = [];
+  links = checkForDuplicates(myData.documents);
+  buildKeyMap(links);
   console.time("async");
   for (var i = 0; i < entities.length; i++) {
     NodeSet.push([entities[i].lat, entities[i].lng]);
@@ -360,7 +362,7 @@ function updateMap(data) {
     targetSets.push(getBubbleSetCoords(links[i]));
   }
   calculateBubbleSetAsync(NodeSet, targetSets, projection);
-  updateMapFunction = applyFilteredData;
+  //updateMapFunction = applyFilteredData;
 }
 //create quad tree of data used to calculate the neighbours for the bubbleSet later.
 function createQuadTree(entities) {
@@ -391,6 +393,7 @@ function updateData(data) {
 }
 //builds key map that is used for the onHover only display the sets relative to this node
 function buildKeyMap(links) {
+  keyMap.clear();
   for (var i = 0; i < links.length; i++) {
     for (var j = 0; j < links[i].length; j++) {
       if (keyMap.has(links[i][j])) {
@@ -432,23 +435,17 @@ function checkForDuplicates(data) {
 }
 
 async function doWork(targetSet, diffSet) {
-  finished = 0;
-  available = false;
-  for (var i = 0; i < maxWorkers; i++) {
-    var worker = new Worker("../js/worker.js");
-    worker.onmessage = onMessage;
-    worker.postMessage({
-      targetSet: targetSet,
-      diffSet: diffSet,
-      thread_id: i,
-      ids: links
-    });
-  }
+  jobSystem.setCallBack(onMessage);
+  jobSystem.setOnFinishedCallback(initialRender);
+  jobSystem.queueWork(work.NEW_DATA, {
+    targetSet: targetSet,
+    diffSet: diffSet,
+    ids: links
+  });
 }
 
 function onMessage(event) {
-  var worker = this;
-  event.data.forEach((value, key) => {
+  event.data.polyLines.forEach((value, key) => {
     tmp = [];
     value.forEach(d => {
       let coords = map
@@ -456,14 +453,18 @@ function onMessage(event) {
         .fromPointToLatLng(new google.maps.Point(d[0] / 8, d[1] / 8));
       tmp.push({ lat: coords.lat(), lng: coords.lng() });
     });
-    sets.set(key, tmp);
+    renderBuffer.getBackBuffer().set(
+      key,
+      new google.maps.Polygon({
+        path: tmp,
+        strokeColor: "#000000",
+        strokeOpacity: 0.5,
+        strokeWeight: bubbleSetOutlineThickness,
+        fillColor: color_scale(Math.random(0, 100) % 23),
+        fillOpacity: bubbleSetOpacity
+      })
+    );
   });
-  finished += 1;
-  worker.terminate();
-  if (finished == 4) {
-    available = true;
-    initialRender();
-  }
 }
 
 function applyFilteredData(data) {
@@ -575,38 +576,36 @@ function renderAppliedFilter() {
     if (keyMap.has(filters[i])) {
       const keys = keyMap.get(filters[i]);
       for (var j = 0; j < keys.length; j++) {
-        polygons.get(keys[j].toString()).setMap(map);
+        renderBuffer
+          .getFrontBuffer()
+          .get(keys[j].toString())
+          .setMap(map);
       }
     }
   }
 }
 function renderRequestedSets() {
-  polygons.forEach((value, key) => {
+  renderBuffer.getFrontBuffer().forEach((value, key) => {
     value.setMap(null);
   });
   for (var i = 0; i < setsToRender.length; i++) {
     for (var j = 0; j < setsToRender[i].length; j++) {
-      if (polygons.has(setsToRender[i][j].toString())) {
-        polygons.get(setsToRender[i][j].toString()).setMap(map);
+      if (renderBuffer.getFrontBuffer().has(setsToRender[i][j].toString())) {
+        renderBuffer
+          .getFrontBuffer()
+          .get(setsToRender[i][j].toString())
+          .setMap(map);
       }
     }
   }
   setsToRender = [];
 }
+
 function initialRender() {
-  sets.forEach((value, key) => {
-    polygons.set(
-      key,
-      new google.maps.Polygon({
-        path: value,
-        strokeColor: "#000000",
-        strokeOpacity: 0.5,
-        strokeWeight: bubbleSetOutlineThickness,
-        fillColor: color_scale(Math.random(0, 100) % 23),
-        fillOpacity: bubbleSetOpacity
-      })
-    );
-    polygons.get(key).setMap(map);
+  renderBuffer.switchFrontBuffer();
+  renderBuffer.clearBackBuffer();
+  renderBuffer.getFrontBuffer().forEach((value, key) => {
+    value.setMap(map);
   });
   console.timeLog("async");
 }
@@ -642,9 +641,6 @@ function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
   projectedCompleteSet = [];
   projectedTargetSets = [];
   completeNodeSet.forEach(d => {
-    //let tmp = projection.fromLatLngToContainerPixel(
-    //  new google.maps.LatLng(d[0], d[1])
-    //);
     let tmp = projectToPixels(new google.maps.LatLng(d[0], d[1]));
     tmp.x = tmp.x * 8;
     tmp.y = tmp.y * 8;
@@ -659,9 +655,6 @@ function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
   targetSets.forEach(x => {
     tmp = [];
     x.forEach(d => {
-      //projTmp = projection.fromLatLngToContainerPixel(
-      //  new google.maps.LatLng(d[0], d[1])
-      //);
       let projTmp = projectToPixels(new google.maps.LatLng(d[0], d[1]));
       projTmp.x = projTmp.x * 8;
       projTmp.y = projTmp.y * 8;

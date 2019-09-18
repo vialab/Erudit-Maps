@@ -21,12 +21,22 @@
     "express": "^4.17.1",
     "font-awesome": "4.7.0",
     "jquery.easing": "^1.4.1",
-    "nodemon": "^1.19.2",
     "request": "^2.88.0",
     "semantic-ui-css": "^2.4.1",
     "simple-line-icons": "2.4.1"
   },
   "scripts": {
     "start": "npx nodemon app.js"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.26.7",
+    "gulp": "^3.9.1",
+    "gulp-clean-css": "^4.2.0",
+    "gulp-header": "^2.0.9",
+    "gulp-rename": "^1.4.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-uglify": "^3.0.2",
+    "gulp-uglify-es": "^1.0.4",
+    "nodemon": "^1.19.2"
   }
 }

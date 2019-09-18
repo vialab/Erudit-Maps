@@ -89,6 +89,11 @@
         <div class="shadow card transition" id="selected-filters">
           <div class="content transition overflow">
             <div class="tool-box-widget" id="filter-list">
+              <div class="progress" id="progress-label">
+                <span class="value" id="computeProgressBar" style="width:0%;"
+                  >idle</span
+                >
+              </div>
               <h2 class="journal">
                 Selected Journals <a onclick="clearJournalFilters();">clear</a>
               </h2>
@@ -224,6 +229,7 @@
 
     <!-- Custom scripts for this template -->
     <script src="js/jquery.tipsy.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nanobar/0.4.2/nanobar.min.js"></script>
     <script src="js/wNumb.min.js"></script>
     <script src="js/nouislider.min.js"></script>
     <script src="js/variables.min.js"></script>
@@ -234,6 +240,7 @@
     <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
     <script src="js/journal.js"></script>
     <script src="js/bubblesets.js"></script>
+    <script src="js/asyncMap.js"></script>
     <script src="js/erudit-maps.js" onload="onLoad()"></script>
   </body>
 </html>

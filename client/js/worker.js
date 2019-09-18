@@ -83,5 +83,5 @@ onmessage = e => {
     polyLines.set(keyList[i], tmpOutline);
   }
   console.log(`[worked thread ${e.data.thread_id}]: finished`);
-  postMessage(polyLines);
+  postMessage({ polyLines, worker_id: e.data.thread_id });
 };
