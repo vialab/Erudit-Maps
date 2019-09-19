@@ -1407,8 +1407,8 @@ BubbleSet.addPadding = function(rects, radius) {
     return {
       "x": r["x"] - radius,
       "y": r["y"] - radius,
-      "width": r["width"] + 2*radius,
-      "height": r["height"] + 2*radius,
+      "width": r["width"] + radius,
+      "height": r["height"] + radius,
     };
   });
 };

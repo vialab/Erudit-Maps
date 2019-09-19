@@ -14,15 +14,16 @@ onmessage = e => {
       //calculate the difference between the two sets
       //based on the current group
       let diffSet = e.data.diffSet.filter(x => {
-        for (var j = 0; j < e.data.targetSet.length; j++) {
-          if (e.data.targetSet[j].x == x.x && e.data.targetSet[j].y == x.y) {
-            console.log(false);
+        for (var j = 0; j < e.data.targetSet[i].length; j++) {
+          if (
+            e.data.targetSet[i][j].x == x.x &&
+            e.data.targetSet[i][j].y == x.y
+          ) {
             return false;
           }
           return true;
         }
       });
-
       //create the outline
       var list = bubbleSet.createOutline(
         BubbleSet.addPadding(e.data.targetSet[i], bubbleSetPadding),
@@ -53,6 +54,13 @@ onmessage = e => {
       let diffSet = e.data.diffSet.filter(x => {
         return !e.data.targetSet[i].includes(x);
       });
+      console.log(
+        diffSet.length +
+          " " +
+          e.data.diffSet.length +
+          " " +
+          e.data.targetSet[i].length
+      );
       var list = bubbleSet.createOutline(
         BubbleSet.addPadding(e.data.targetSet[i], bubbleSetPadding),
         BubbleSet.addPadding(diffSet, bubbleSetPadding),

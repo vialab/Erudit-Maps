@@ -174,17 +174,12 @@ var currentBuffer = 0;
 var renderBuffer = new RenderBuffer();
 var jobSystem = new JobTaskSystem();
 var node_coord = {};
-var polygons = new Map();
 var setsToRender = [];
 var keyMap = new Map();
 var sets = new Map();
 var filters = [];
 var links;
 var bubbleset = new BubbleSet();
-//web worker max number the hardware supports
-var maxWorkers = navigator.hardwareConcurrency;
-var numOfWorkers = 0;
-var taskIndex = 0;
 //overlay variables
 var overlay;
 var layer;
@@ -198,9 +193,6 @@ var bubbleSetOpacity = 0.35;
 var nodeSize = 9;
 var myData = null;
 var quadTree;
-var zoomWork = null;
-var finished = 0;
-var available = true;
 //function callbacks based on if the map is loaded or not
 var updateDataFunction = updateData;
 //do nothing until map is loaded
@@ -344,15 +336,13 @@ function updateMap(data) {
     $(".tipsy").css("top", event.pageY - 16 + "px");
   });
 
-  //clear polys off map before drawing again
-  emptyMap();
-
   var NodeSet = [];
   var entities = Object.values(data.entities);
   var targetSets = [];
   filters = [];
   links = checkForDuplicates(myData.documents);
   buildKeyMap(links);
+  console.log(myData);
   console.time("async");
   for (var i = 0; i < entities.length; i++) {
     NodeSet.push([entities[i].lat, entities[i].lng]);
@@ -361,8 +351,7 @@ function updateMap(data) {
   for (var i = 0; i < links.length; i++) {
     targetSets.push(getBubbleSetCoords(links[i]));
   }
-  calculateBubbleSetAsync(NodeSet, targetSets, projection);
-  //updateMapFunction = applyFilteredData;
+  calculateBubbleSetAsync(NodeSet, targetSets);
 }
 //create quad tree of data used to calculate the neighbours for the bubbleSet later.
 function createQuadTree(entities) {
@@ -558,9 +547,6 @@ function applyFilteredData(data) {
     $(".tipsy").css("left", event.pageX + 16 + "px");
     $(".tipsy").css("top", event.pageY - 16 + "px");
   });
-  polygons.forEach(d => {
-    d.setMap(null);
-  });
   var entities = Object.values(data.entities);
   filters = [];
   for (var i = 0; i < entities.length; i++) {
@@ -571,6 +557,7 @@ function applyFilteredData(data) {
   buildKeyMap(links);
   renderAppliedFilter();
 }
+
 function renderAppliedFilter() {
   for (var i = 0; i < filters.length; i++) {
     if (keyMap.has(filters[i])) {
@@ -584,6 +571,7 @@ function renderAppliedFilter() {
     }
   }
 }
+
 function renderRequestedSets() {
   renderBuffer.getFrontBuffer().forEach((value, key) => {
     value.setMap(null);
@@ -607,7 +595,7 @@ function initialRender() {
   renderBuffer.getFrontBuffer().forEach((value, key) => {
     value.setMap(map);
   });
-  console.timeLog("async");
+  console.timeEnd("async");
 }
 
 //https://developers.google.com/maps/documentation/javascript/examples/map-coordinates
@@ -667,6 +655,7 @@ function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
     });
     projectedTargetSets.push(tmp);
   });
+  console.table(projectedTargetSets, projectedCompleteSet);
   doWork(projectedTargetSets, projectedCompleteSet);
 }
 //calculates bubbleset first param is the complete node set, the target set is the grouping of nodes the bubbleset is calculating
@@ -786,16 +775,7 @@ function drawLineNodesStraight(data, i) {
     polygons.push(polygon);
   }
 }
-//empty all nodes associated to the map: polygons, polylines...etc.
-function emptyMap() {
-  // clear polys off map before drawing again
-  while (polygons.length > 0) {
-    polygons.pop().setMap(null);
-  }
-  //while (polylines.length > 0) {
-  //  polylines.pop().setMap(null);
-  //}
-}
+
 //draw functions for map -- might not have to clear overlays we will see
 function drawOverlay() {
   //clearOverlays();
@@ -804,10 +784,6 @@ function drawOverlay() {
     .selectAll("svg")
     .data(d3.values(myData.entities))
     .each(transform);
-
-  for (var i = 0; i < polygons.length; i++) {
-    polygons[i].setMap(map);
-  }
 }
 //defines 5 points between to geo-location which is used to create a straight line
 function getGoogleCoords(links) {
