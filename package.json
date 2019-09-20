@@ -21,6 +21,7 @@
     "express": "^4.17.1",
     "font-awesome": "4.7.0",
     "jquery.easing": "^1.4.1",
+    "pg": "^7.12.1",
     "request": "^2.88.0",
     "semantic-ui-css": "^2.4.1",
     "simple-line-icons": "2.4.1"

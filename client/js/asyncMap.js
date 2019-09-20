@@ -38,18 +38,23 @@ const work = {
 
 class JobTaskSystem {
   constructor() {
-    //initialize workers
-    for (var i = 0; i < navigator.hardwareConcurrency; i++) {
-      this.workers[i] = new Worker("../js/worker.js");
-      this.worker_ids[i] = i;
-      this.availableWorkers.set(i, i);
-      this.workers[i].onmessage = this.onMessageCallBack.bind(this);
-    }
+    //initialize worker
+    this.initWorkers();
     //initialize workBackLog based on the work enum
     //therefore add new enums to work to allocate more backlogs
     var tmpValues = Object.values(work);
     for (var i = 0; i < tmpValues.length; i++) {
       this.workerBackLog[tmpValues[i]] = [];
+    }
+    console.log(this.workerBackLog);
+  }
+
+  initWorkers() {
+    for (var i = 0; i < navigator.hardwareConcurrency; i++) {
+      this.workers[i] = new Worker("../js/worker.js");
+      this.worker_ids[i] = i;
+      this.availableWorkers.set(i, i);
+      this.workers[i].onmessage = this.onMessageCallBack.bind(this);
     }
   }
 
@@ -58,6 +63,7 @@ class JobTaskSystem {
       if (typeOfWork == this.currentWork) {
         //no point in finishing this as the map was updated
         this.terminateWorkers();
+        this.initWorkers();
         document.getElementById("computeProgressBar").style =
           "width:" + 0 + "%;";
         document.getElementById("computeProgressBar").innerHTML = "Processing";
@@ -67,7 +73,9 @@ class JobTaskSystem {
         }
       } else {
         //clear the old cache as it is being updated
-        this.workerBackLog[typeOfWork].clear();
+        if (this.workerBackLog[typeOfWork].length) {
+          this.workerBackLog[typeOfWork].clear();
+        }
         //cache the new work
         this.workerBackLog[typeOfWork].push(data);
       }

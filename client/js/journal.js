@@ -13,6 +13,9 @@ d3.json("/journal", function(error, data) {
   // drawJournalList();
 });
 
+d3.json("/test", function(error, data) {
+  console.log(data);
+});
 // draw the journal select list
 function drawJournalList() {
   $("#journal-list option").remove();

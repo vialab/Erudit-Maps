@@ -139,10 +139,9 @@ var map = new google.maps.Map(d3.select("#map").node(), {
     }
   ]
 });
-
+var overlays = [];
 var map_data;
 var filter_data;
-var overlays = [];
 var colors = [
   "#e07b91",
   "#d33f6a",
@@ -170,13 +169,11 @@ var colors = [
   "#e6afb9"
 ];
 var color_scale = d3.scale.ordinal().range(colors);
-var currentBuffer = 0;
 var renderBuffer = new RenderBuffer();
 var jobSystem = new JobTaskSystem();
 var node_coord = {};
 var setsToRender = [];
 var keyMap = new Map();
-var sets = new Map();
 var filters = [];
 var links;
 var bubbleset = new BubbleSet();
@@ -188,9 +185,7 @@ var adminDivisions;
 var padding = 10;
 //bubbleset values
 var bubbleSetOutlineThickness = 1;
-var bubbleSetPadding = 0;
 var bubbleSetOpacity = 0.35;
-var nodeSize = 9;
 var myData = null;
 var quadTree;
 //function callbacks based on if the map is loaded or not
@@ -336,22 +331,16 @@ function updateMap(data) {
     $(".tipsy").css("top", event.pageY - 16 + "px");
   });
 
-  var NodeSet = [];
   var entities = Object.values(data.entities);
-  var targetSets = [];
   filters = [];
   links = checkForDuplicates(myData.documents);
   buildKeyMap(links);
-  console.log(myData);
   console.time("async");
   for (var i = 0; i < entities.length; i++) {
-    NodeSet.push([entities[i].lat, entities[i].lng]);
+    //NodeSet.push([entities[i].lat, entities[i].lng]);
     filters.push(entities[i].entityid);
   }
-  for (var i = 0; i < links.length; i++) {
-    targetSets.push(getBubbleSetCoords(links[i]));
-  }
-  calculateBubbleSetAsync(NodeSet, targetSets);
+  doWork(myData.entities, links, 1 << map.getZoom(), work.NEW_DATA);
 }
 //create quad tree of data used to calculate the neighbours for the bubbleSet later.
 function createQuadTree(entities) {
@@ -395,8 +384,9 @@ function buildKeyMap(links) {
   }
 }
 function onZoom() {
-  if (available) {
-  }
+  console.log("zoom");
+  console.log(myData.entities);
+  doWork(myData.entities, links, 1 << map.getZoom(), work.ZOOM);
 }
 
 function checkForDuplicates(data) {
@@ -423,13 +413,13 @@ function checkForDuplicates(data) {
   return collisionFreeLinks;
 }
 
-async function doWork(targetSet, diffSet) {
+async function doWork(entities, links, zoom, work) {
   jobSystem.setCallBack(onMessage);
-  jobSystem.setOnFinishedCallback(initialRender);
-  jobSystem.queueWork(work.NEW_DATA, {
-    targetSet: targetSet,
-    diffSet: diffSet,
-    ids: links
+  jobSystem.setOnFinishedCallback(render);
+  jobSystem.queueWork(work, {
+    entities: entities,
+    links: links,
+    zoom: zoom
   });
 }
 
@@ -439,7 +429,9 @@ function onMessage(event) {
     value.forEach(d => {
       let coords = map
         .getProjection()
-        .fromPointToLatLng(new google.maps.Point(d[0] / 8, d[1] / 8));
+        .fromPointToLatLng(
+          new google.maps.Point(d[0] / event.data.zoom, d[1] / event.data.zoom)
+        );
       tmp.push({ lat: coords.lat(), lng: coords.lng() });
     });
     renderBuffer.getBackBuffer().set(
@@ -450,112 +442,11 @@ function onMessage(event) {
         strokeOpacity: 0.5,
         strokeWeight: bubbleSetOutlineThickness,
         fillColor: color_scale(Math.random(0, 100) % 23),
-        fillOpacity: bubbleSetOpacity
+        fillOpacity: bubbleSetOpacity,
+        geodesic: false
       })
     );
   });
-}
-
-function applyFilteredData(data) {
-  overlay.layer.selectAll("svg").remove();
-  var marker = overlay.layer
-    .selectAll("svg")
-    .data(d3.values(data.entities))
-    .each(transform) // update existing markers
-    .enter()
-    .append("svg")
-    .each(transform)
-    .attr("class", "marker")
-    .attr("doc-id", function(d) {
-      return d.entityid;
-    })
-    .attr("journal-id", function(d) {
-      return d.entityid;
-    })
-    .on("mouseover", function(d) {
-      d3.select(this)
-        .selectAll("circle")
-        .attr("r", 9)
-        .attr("fill", "rgba(63, 184, 175, 0.8)")
-        .style("stroke", "rgba(63, 184, 175, 1)");
-      var keys = keyMap.get(d.entityid);
-      for (var i = 0; i < keys.length; i++) {
-        for (var j = 0; j < keys[i].length; j++) {
-          let key = keys[i][j];
-          overlay.layer
-            .select(`[doc-id="${key}"]`)
-            .select("circle")
-            .attr("r", 9)
-            .attr("fill", "rgba(63, 184, 175, 0.8)")
-            .style("stroke", "rgba(63, 184, 175, 1)");
-        }
-      }
-      setsToRender.push(keys);
-      renderRequestedSets();
-    })
-    .on("mouseout", function(d) {
-      d3.select(this)
-        .selectAll("circle")
-        .attr("r", 4.5)
-        .attr("fill", rgb_highlight(d.entityid))
-        .style("stroke", rgb_highlight);
-      var keys = keyMap.get(d.entityid);
-      for (var i = 0; i < keys.length; i++) {
-        for (var j = 0; j < keys[i].length; j++) {
-          let key = keys[i][j];
-          overlay.layer
-            .select(`[doc-id="${key}"]`)
-            .selectAll("circle")
-            .attr("r", 4.5)
-            .attr("fill", rgb_highlight(key))
-            .style("stroke", rgb_highlight);
-        }
-      }
-      renderAppliedFilter();
-    })
-    .on("click", function(d) {
-      openDocumentsBar(d.entityid, d.affiliation);
-    });
-
-  //// Add a circle.
-  marker
-    .append("circle")
-    .attr("r", 4.5)
-    .attr("cx", padding)
-    .attr("cy", padding)
-    .attr("fill", function(d) {
-      return rgb_highlight(d.entityid);
-    })
-    .attr("stroke", function(d) {
-      if (rgb_highlight(d.entityid) != rgb_default) {
-        return "#000";
-      } else {
-        return rgb_stroke;
-      }
-    });
-
-  $("svg circle").tipsy({
-    gravity: "w",
-    html: true,
-    title: function() {
-      var d = this.__data__;
-      return d.affiliation;
-    }
-  });
-
-  $("svg circle").mousemove(function(event) {
-    $(".tipsy").css("left", event.pageX + 16 + "px");
-    $(".tipsy").css("top", event.pageY - 16 + "px");
-  });
-  var entities = Object.values(data.entities);
-  filters = [];
-  for (var i = 0; i < entities.length; i++) {
-    filters.push(entities[i].entityid);
-  }
-  links = checkForDuplicates(data.documents);
-  keyMap.clear();
-  buildKeyMap(links);
-  renderAppliedFilter();
 }
 
 function renderAppliedFilter() {
@@ -589,7 +480,7 @@ function renderRequestedSets() {
   setsToRender = [];
 }
 
-function initialRender() {
+function render() {
   renderBuffer.switchFrontBuffer();
   renderBuffer.clearBackBuffer();
   renderBuffer.getFrontBuffer().forEach((value, key) => {
@@ -598,21 +489,6 @@ function initialRender() {
   console.timeEnd("async");
 }
 
-//https://developers.google.com/maps/documentation/javascript/examples/map-coordinates
-function projectToPixels(latLng) {
-  const SCALE = 1 << map.getZoom();
-  const TILE_SIZE = 256;
-  var siny = Math.sin((latLng.lat() * Math.PI) / 180);
-
-  // Truncating to 0.9999 effectively limits latitude to 89.189. This is
-  // about a third of a tile past the edge of the world tile.
-  siny = Math.min(Math.max(siny, -0.9999), 0.9999);
-
-  return new google.maps.Point(
-    TILE_SIZE * (0.5 + latLng.lng() / 360),
-    TILE_SIZE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI))
-  );
-}
 //transforms markers from lat,lng to pixels based on the maps projection
 function transform(d) {
   node_coord[d.entityid] = [d.lat, d.lng];
@@ -625,98 +501,6 @@ function transform(d) {
     .style("z-index", 99);
 }
 
-function calculateBubbleSetAsync(completeNodeSet, targetSets, projection) {
-  projectedCompleteSet = [];
-  projectedTargetSets = [];
-  completeNodeSet.forEach(d => {
-    let tmp = projectToPixels(new google.maps.LatLng(d[0], d[1]));
-    tmp.x = tmp.x * 8;
-    tmp.y = tmp.y * 8;
-    projectedCompleteSet.push({
-      x: tmp.x,
-      y: tmp.y,
-      width: nodeSize,
-      height: nodeSize
-    });
-  });
-
-  targetSets.forEach(x => {
-    tmp = [];
-    x.forEach(d => {
-      let projTmp = projectToPixels(new google.maps.LatLng(d[0], d[1]));
-      projTmp.x = projTmp.x * 8;
-      projTmp.y = projTmp.y * 8;
-      tmp.push({
-        x: projTmp.x,
-        y: projTmp.y,
-        width: nodeSize,
-        height: nodeSize
-      });
-    });
-    projectedTargetSets.push(tmp);
-  });
-  console.table(projectedTargetSets, projectedCompleteSet);
-  doWork(projectedTargetSets, projectedCompleteSet);
-}
-//calculates bubbleset first param is the complete node set, the target set is the grouping of nodes the bubbleset is calculating
-//projection is the current projection of the map
-//padding is the padding between each node
-function calculateBubbleSet(completeNodeSet, targetSet, projection, padding) {
-  let diff = completeNodeSet.filter(x => {
-    return !targetSet.includes(x);
-  });
-  var setRects = [];
-  var diffRects = [];
-  targetSet.forEach(x => {
-    let tmp = new google.maps.LatLng(x[0], x[1]);
-    setRects.push({
-      x: projection.fromLatLngToContainerPixel(tmp).x,
-      y: projection.fromLatLngToContainerPixel(tmp).y,
-      width: 10,
-      height: 10
-    });
-  });
-
-  diff.forEach(x => {
-    let tmp = new google.maps.LatLng(x[0], x[1]);
-    diffRects.push({
-      x: projection.fromLatLngToContainerPixel(tmp).x,
-      y: projection.fromLatLngToContainerPixel(tmp).y,
-      width: 10,
-      height: 10
-    });
-  });
-  var list = bubbleset.createOutline(
-    BubbleSet.addPadding(setRects, padding),
-    BubbleSet.addPadding(diffRects, padding),
-    null
-  );
-
-  var outline = new PointPath(list).transform([
-    new ShapeSimplifier(0.0),
-    new BSplineShapeGenerator(),
-    new ShapeSimplifier(0.0)
-  ]);
-  polyLineNodes = [];
-  outline.forEach(d => {
-    let tmpPoint = new google.maps.Point(d[0], d[1]);
-    var tmpCoordinates = projection.fromContainerPixelToLatLng(tmpPoint);
-    polyLineNodes.push({
-      lat: tmpCoordinates.lat(),
-      lng: tmpCoordinates.lng()
-    });
-  });
-  return polyLineNodes;
-}
-//gets the lat, Lat based on entityID in array format [lat,lng]
-function getBubbleSetCoords(links) {
-  let bubSet = [];
-  for (var i = 0; i < links.length; i++) {
-    let tmp = node_coord[links[i]];
-    bubSet.push([tmp[0], tmp[1]]);
-  }
-  return bubSet;
-}
 //gets the lat, lng based on entityID in object format [{lat:,lng:}]
 function getCoords(links) {
   var coords = [];
