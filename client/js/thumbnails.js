@@ -1,9 +1,6 @@
 "use strict";
 // Start of use strict
 
-// var MAPS_KEY = "AIzaSyAEY47UcXHWwbDR6AW1xIJxDvh8pkVfDag" 
-var MAPS_KEY = "BvP0CB9AOgMhTqOXGeLcBiiPRzMAeqvX"
-
 const vw = $("#map").width()
 const vh = $("#map").height()
 
@@ -23,7 +20,6 @@ var thumbPage = 1
 var thumbFilter = {
     active: false,
     activeThumb: null,
-    // activeThumbs: 
     oldMyData: {},
 }
 var activeFilters = new Map();
@@ -33,26 +29,9 @@ const cardContainer = $('#thumbnail-cards')
 function initThumbnails() {
     let thumb
     for (let id = 0; id < 6; id++) {
-        // setTimeout(function () {
-        //     let thumb = $(`#bubblethumb-${id}>div`).filter((i, e) => $(e).css('z-index') == "1")
-        //     // console.log(thumb)
-        //     thumb.remove()
-        // }, 1400)
-
         thumb = new Thumbnail(id)
-        // thumbMaps.push(thumb)
-        // thumbMaps.push(thumbMap)
     }
 
-    // map.addListener("zoom_changed", function () {
-    //     // resetThumbnails()
-    //     clearThumbnails()
-    // })
-
-    // map.addListener("bounds_changed", function () {
-    //     // resetThumbnails()
-    //     clearThumbnails()
-    // })
 
     let resizeListener = thumb.map.addListener("tilesloaded", _ => {
         $('#map').attr("style", `height: calc(100vh - ${$('#thumbnail-cards').parent().height()}px)`)
@@ -85,7 +64,6 @@ function initThumbnails() {
 
 function addThumbnail(key, data, colour) {
     thumbnailData.set(key, [data, colour])
-    // thumbList.push(key)
 }
 
 function applyThumbnailFilters() {
@@ -94,12 +72,6 @@ function applyThumbnailFilters() {
 
         let documents = []
         for (let [key, ids] of activeFilters) {
-            // const key = thumbFilter.activeThumb.key
-
-            // let ids = []
-            // key.split(',').forEach(v => {
-            //     tmp.push(Number(v))
-            // })
             setsToRender.push([ids])
 
             let docTmp = $.grep(filter_data.documents, function (doc, i) {
@@ -134,17 +106,10 @@ function applyThumbnailFilters() {
 
 function setThumbnailFilters(thumbNail) {
 
-    // if (thumbFilter.activeThumb) {
-    //     if (thumbFilter.activeThumb !== thumbNail) {
-    //         thumbFilter.activeThumb.setActive(false)
-    //     }
-    // }
+
     if (thumbNail && thumbNail.active) {
         activePages.set(thumbPage, Math.min(6, activePages.get(thumbPage) + 1))
-        // thumbFilter.active = true
-        // thumbFilter.activeThumb.setActive(false)
 
-        // thumbFilter.activeThumb = thumbNail
         let ids = []
         thumbNail.key.split(',').forEach(v => {
             ids.push(Number(v))
@@ -214,7 +179,6 @@ function drawThumbnails() {
             }
 
         } else {
-            // $(thumbMap.getDiv()).parent().parent().hide()
             thumbMap.hide()
         }
     }
@@ -222,7 +186,6 @@ function drawThumbnails() {
 
 function clearThumbnails() {
     thumbnails.forEach((value, key) => {
-        // value.setMap(null)
         thumbnails.delete(key)
         value.clearBubbleSet()
     })
@@ -238,8 +201,6 @@ function resetThumbnails() {
 
 class Thumbnail {
     constructor(id, parent) {
-        // this.height = height;
-        // this.width = width;
         this.active = false
         this.id = id
         this.parent = parent
@@ -255,7 +216,6 @@ class Thumbnail {
     }
 
     createMap() {
-        // this.parent.before(`<div class="shadow card transition" style="width: auto; margin: 0.875em 0.35em">
         $('#filter-right').before(`<div class="ui card" style="width: auto; margin: .625em .35em">
         <div class="content transition overflow" style="padding: 0px 0px">
           <div class="thumbnail-container" id="bubblethumb-${this.id}">
@@ -279,8 +239,6 @@ class Thumbnail {
             fullscreenControl: false,
             styles: map.styles
         });
-
-        // thumbMaps.push(this.map)
         thumbMaps.push(this)
 
         this.overlay = new google.maps.OverlayView();
@@ -308,7 +266,6 @@ class Thumbnail {
 
     setBubbleSet(key) {
         this.key = key
-        // this.bubbleData = thumbnailData.get(key)
         const bubbleData = thumbnailData.get(key)
         this.bubbleSet = new google.maps.Polygon({
             path: bubbleData[0],
@@ -361,7 +318,6 @@ class Thumbnail {
         this.overlay.draw = _ => {
             this.overlay.layer
                 .selectAll("svg")
-                // .data(d3.values(myData.entities))
                 .data(setEntities)
                 .each(transform);
         }
@@ -369,7 +325,6 @@ class Thumbnail {
         this.overlay.layer.selectAll("svg").remove();
         let marker = this.overlay.layer
             .selectAll("svg")
-            // .data(d3.values(myData.entities))
             .data(setEntities)
             .each(transform) // update existing markers
             .enter()
@@ -407,8 +362,6 @@ class Thumbnail {
             bounds.extend(value)
         })
         this.map.fitBounds(bounds, { top: 16, right: 16, bottom: 16, left: 16 })
-        // thumbMap.setZoom(map.zoom)
-        // thumbMap.setCenter(bounds.)
     }
 
     setActive(active) {
