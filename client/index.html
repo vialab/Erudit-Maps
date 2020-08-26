@@ -1,55 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
 
-    <title>Erudit Maps</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
 
-    <!-- Semantic/Bootstrap core CSS -->
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"
-      rel="stylesheet"
-    />
-    <!-- <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> -->
+  <title>Erudit Maps</title>
 
-    <!-- Custom fonts for this template -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/fontawesome.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.min.css"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Lato"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css?family=Muli"
-      rel="stylesheet"
-    />
+  <!-- Semantic/Bootstrap core CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet" />
+  <!-- <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> -->
 
-    <!-- Custom styles for this template -->
-    <link href="css/tipsy.css" rel="stylesheet" />
-    <link href="css/main.min.css" rel="stylesheet" />
-    <link href="css/erudit-maps.css" rel="stylesheet" />
-    <link href="css/nouislider.min.css" rel="stylesheet" />
-  </head>
+  <!-- Custom fonts for this template -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/fontawesome.min.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet" />
 
-  <body class="pushable" id="page-top">
-    <!-- Navigation -->
-    <!--<div class="ui fixed inverted menu">
+  <!-- Custom styles for this template -->
+  <link href="css/tipsy.css" rel="stylesheet" />
+  <link href="css/main.css" rel="stylesheet" />
+  <!-- <link href="css/main.min.css" rel="stylesheet" /> -->
+  <link href="css/erudit-maps.css" rel="stylesheet" />
+  <link href="css/nouislider.min.css" rel="stylesheet" />
+</head>
+
+<body class="pushable" id="page-top">
+  <!-- Navigation -->
+  <!--<div class="ui fixed inverted menu">
       <div class="ui container">
         <a href="#page-top" class="header item js-scroll-trigger">Erudit Maps</a>
         <div class="right menu">
@@ -61,186 +43,191 @@
       </div>
     </div>-->
 
-    <div class="pusher">
-      <!-- BODY -->
-      <div class="ui vertical stripe segment" id="map">
-        <div class="ui text container center"></div>
-      </div>
+  <div class="pusher">
+    <!-- BODY -->
+    <div class="ui vertical stripe segment" id="map">
+      <div class="ui text container center"></div>
+    </div>
 
-      <div class="ui longer modal" id="doc-modal">
-        <i class="close icon"></i>
-        <div class="header"></div>
+    <div class="ui longer modal" id="doc-modal">
+      <i class="close icon"></i>
+      <div class="header"></div>
+      <div class="content">
+        <div id="no-doc">
+          SORRY! No documents are available for viewing at this time.
+        </div>
+        <div class="ui equal height stackable grid" id="doc-content">
+          <div id="doc-list"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="ui button" onclick="$(this).modal('hide');">close</div>
+      </div>
+    </div>
+    <div class="transition" id="toggle-widgets" onclick="toggleSideBar();">
+      <i class="left"></i>
+    </div>
+    <div class="ui cards transition" id="widget-cards">
+      <div class="shadow card transition" id="selected-filters">
+        <div class="content transition overflow">
+          <div class="tool-box-widget" id="filter-list">
+            <div class="progress" id="progress-label">
+              <span class="value" id="computeProgressBar" style="width:0%;">idle</span>
+            </div>
+            <h2 class="journal">
+              Selected Journals <a onclick="clearJournalFilters();">clear</a>
+            </h2>
+            <ul id="journal-filter">
+              <i>None selected</i>
+            </ul>
+            <h2 class="author">
+              Selected Authors <a onclick="clearAuthorFilters();">clear</a>
+            </h2>
+            <ul id="author-filter">
+              <i>None Selected</i>
+            </ul>
+            <h2 class="year">Year Range</h2>
+            <div id="filter-date" class="nouislider"></div>
+          </div>
+        </div>
+        <div class="extra content transition" onclick="toggleFilterBar();">
+          Show more filters +
+        </div>
+      </div>
+      <div class="shadow card filter-widget transition" style="display: none;">
         <div class="content">
-          <div id="no-doc">
-            SORRY! No documents are available for viewing at this time.
-          </div>
-          <div class="ui equal height stackable grid" id="doc-content">
-            <div id="doc-list"></div>
-          </div>
-        </div>
-        <div class="actions">
-          <div class="ui button" onclick="$(this).modal('hide');">close</div>
-        </div>
-      </div>
-      <div class="transition" id="toggle-widgets" onclick="toggleSideBar();">
-        <i class="left"></i>
-      </div>
-      <div class="ui cards transition" id="widget-cards">
-        <div class="shadow card transition" id="selected-filters">
-          <div class="content transition overflow">
-            <div class="tool-box-widget" id="filter-list">
-              <div class="progress" id="progress-label">
-                <span class="value" id="computeProgressBar" style="width:0%;"
-                  >idle</span
-                >
-              </div>
-              <h2 class="journal">
-                Selected Journals <a onclick="clearJournalFilters();">clear</a>
-              </h2>
-              <ul id="journal-filter">
-                <i>None selected</i>
-              </ul>
-              <h2 class="author">
-                Selected Authors <a onclick="clearAuthorFilters();">clear</a>
-              </h2>
-              <ul id="author-filter">
-                <i>None Selected</i>
-              </ul>
-              <h2 class="year">Year Range</h2>
-              <div id="filter-date" class="nouislider"></div>
-            </div>
-          </div>
-          <div class="extra content transition" onclick="toggleFilterBar();">
-            Show more filters +
-          </div>
-        </div>
-        <div
-          class="shadow card filter-widget transition"
-          style="display: none;"
-        >
-          <div class="content">
-            <h2>Title Filter</h2>
-            <div class="ui input">
-              <input
-                id="filter-title"
-                type="text"
-                placeholder="Type a keyword"
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          class="shadow card filter-widget transition"
-          style="display: none;"
-        >
-          <div class="content">
-            <div class="tool-box-widget" id="set-size">
-              <h2>Set Size Filter</h2>
-              <div id="filter-set-size" class="nouislider"></div>
-            </div>
-          </div>
-        </div>
-        <div
-          class="shadow card filter-widget transition"
-          style="display: none;"
-        >
-          <div class="content">
-            <div id="journal-widget">
-              <h2>Journals</h2>
-              <select
-                class="list"
-                id="journal-list"
-                size="10"
-                multiple
-              ></select>
-            </div>
-          </div>
-          <div class="extra content" onclick="applyFilters(true);">
-            Select Journals
-          </div>
-        </div>
-        <div
-          class="shadow card transition filter-widget"
-          style="display: none;"
-        >
-          <div class="content">
-            <div id="author-widget">
-              <h2>Authors</h2>
-              <select class="list" id="author-list" size="10" multiple></select>
-            </div>
-          </div>
-          <div class="extra content" onclick="applyFilters(true);">
-            Select Authors
-          </div>
-        </div>
-        <div
-          class="card transition"
-          id="close-card"
-          onclick="toggleFilterBar();"
-          style="display:none"
-        >
-          <div class="content">
-            Show less -
+          <h2>Title Filter</h2>
+          <div class="ui input">
+            <input id="filter-title" type="text" placeholder="Type a keyword" />
           </div>
         </div>
       </div>
-    </div>
-    <!-- FOOTER -->
-    <div class="ui inverted vertical footer segment" id="footer">
-      <div class="ui container">
-        <div class="ui inverted divided equal height stackable grid">
-          <div class="three wide column">
-            <h4 class="ui inverted header">About</h4>
-            <div class="ui inverted link list">
-              <a href="http://vialab.ca" class="item">Contact Us</a>
-              <a href="https://sawal.ca" class="item">Developer</a>
-            </div>
+      <div class="shadow card filter-widget transition" style="display: none;">
+        <div class="content">
+          <div class="tool-box-widget" id="set-size">
+            <h2>Set Size Filter</h2>
+            <div id="filter-set-size" class="nouislider"></div>
           </div>
-          <div class="three wide column">
-            <h4 class="ui inverted header">Project</h4>
-            <div class="ui inverted link list">
-              <a href="https://textension.vialab.science.uoit.ca" class="item"
-                >Textension</a
-              >
-              <a
-                href="https://github.com/vialab/OpenSSH-Doc-Analyzer"
-                class="item"
-                >Document Analyzer</a
-              >
-            </div>
+        </div>
+      </div>
+      <div class="shadow card filter-widget transition" style="display: none;">
+        <div class="content">
+          <div id="journal-widget">
+            <h2>Journals</h2>
+            <select class="list" id="journal-list" size="10" multiple></select>
           </div>
-          <div class="seven wide column">
-            <h4 class="ui inverted header">Erudit Maps</h4>
-            <p>
-              This project explores the entities found in the Erudit corpus, and
-              was funded by the Open Social Sciences and Humanities grant.
-            </p>
+        </div>
+        <div class="extra content" onclick="applyFilters(true);">
+          Select Journals
+        </div>
+      </div>
+      <div class="shadow card transition filter-widget" style="display: none;">
+        <div class="content">
+          <div id="author-widget">
+            <h2>Authors</h2>
+            <select class="list" id="author-list" size="10" multiple></select>
           </div>
+        </div>
+        <div class="extra content" onclick="applyFilters(true);">
+          Select Authors
+        </div>
+      </div>
+      <div class="card transition" id="close-card" onclick="toggleFilterBar();" style="display:none">
+        <div class="content">
+          Show less -
         </div>
       </div>
     </div>
 
-    <!-- Semantic/Bootstrap core JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
-    <!-- <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script> -->
-    <!-- Plugin JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+    <!-- <div class="column grid ui">
+      <div class="shadow card transition thumbnail-navbtn" id="filter-left">
+        <div class="content transition overflow">
+        </div>
+      </div>
+      <div class="ui cards transition" id="thumbnail-cards">
+      </div>
+      <div class="shadow card transition thumbnail-navbtn" id="filter-right">
+        <div class="content transition overflow">
+        </div>
+      </div>
+    </div> -->
 
-    <!-- Custom scripts for this template -->
-    <script src="js/jquery.tipsy.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nanobar/0.4.2/nanobar.min.js"></script>
-    <script src="js/wNumb.min.js"></script>
-    <script src="js/nouislider.min.js"></script>
-    <script src="js/variables.min.js"></script>
-    <script src="js/main.min.js"></script>
-    <script src="//maps.google.com/maps/api/js?key=AIzaSyAEY47UcXHWwbDR6AW1xIJxDvh8pkVfDag"></script>
-    <!--key=AIzaSyBwRHzid2fvKFJ5mzbOwC966PK1KcHWQms-->!>
-    <script src="https://d3js.org/d3.v3.js"></script>
-    <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
-    <script src="js/journal.js"></script>
-    <script src="js/bubblesets.js"></script>
-    <script src="js/asyncMap.js"></script>
-    <script src="js/erudit-maps.js" onload="onLoad()"></script>
-  </body>
+    <div class="ui grid">
+
+      <div class="wide column centered">
+        <button class="ui card icon button" id="clear-thumbs">
+          <p>Clear</p>
+        </button>
+
+        <div class="ui cards" id="thumbnail-cards">
+          <button class="column ui card icon button thumbnail-navbtn" id="filter-left" style="display:none">
+            <i class="left arrow icon"></i>
+          </button>
+
+          <!-- maps get filled here -->
+
+          <button class="column ui card icon button thumbnail-navbtn" id="filter-right" style="display: none;">
+            <i class="right arrow icon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- FOOTER -->
+  <div class="ui inverted vertical footer segment" id="footer">
+    <div class="ui container">
+      <div class="ui inverted divided equal height stackable grid">
+        <div class="three wide column">
+          <h4 class="ui inverted header">About</h4>
+          <div class="ui inverted link list">
+            <a href="http://vialab.ca" class="item">Contact Us</a>
+            <a href="https://sawal.ca" class="item">Developer</a>
+          </div>
+        </div>
+        <div class="three wide column">
+          <h4 class="ui inverted header">Project</h4>
+          <div class="ui inverted link list">
+            <a href="https://textension.vialab.science.uoit.ca" class="item">Textension</a>
+            <a href="https://github.com/vialab/OpenSSH-Doc-Analyzer" class="item">Document Analyzer</a>
+          </div>
+        </div>
+        <div class="seven wide column">
+          <h4 class="ui inverted header">Erudit Maps</h4>
+          <p>
+            This project explores the entities found in the Erudit corpus, and
+            was funded by the Open Social Sciences and Humanities grant.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semantic/Bootstrap core JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+  <!-- <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script> -->
+  <!-- Plugin JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for this template -->
+  <script src="js/jquery.tipsy.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nanobar/0.4.2/nanobar.min.js"></script>
+  <script src="js/wNumb.min.js"></script>
+  <script src="js/nouislider.min.js"></script>
+  <!-- <script src="js/variables.min.js"></script> -->
+  <script src="js/variables.js"></script>
+  <script src="js/main.min.js"></script>
+  <script src="//maps.google.com/maps/api/js?key=AIzaSyAEY47UcXHWwbDR6AW1xIJxDvh8pkVfDag"></script>
+  <script src="https://d3js.org/d3.v3.js"></script>
+  <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
+  <script src="js/journal.js"></script>
+  <script src="js/bubblesets.js"></script>
+  <script src="js/asyncMap.js"></script>
+  <script src="js/erudit-maps.js" onload="onLoad()"></script>
+  <!-- <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script> -->
+  <script src="js/thumbnails.js"></script>
+</body>
+
 </html>

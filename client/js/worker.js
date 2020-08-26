@@ -120,9 +120,9 @@ onmessage = e => {
     result[i].forEach(d => {
       tmpOutline.push([d[0], d[1]]);
     });
-    polyLines.set(keyList[i], tmpOutline);
+    polyLines.set(keyList[i], [tmpOutline]);
   }
-  console.log(`[worked thread ${e.data.thread_id}]: finished`);
+  // console.log(`[worker thread ${e.data.thread_id}]: finished`);
   postMessage({ polyLines, worker_id: e.data.thread_id, zoom: zoomCache });
 };
 

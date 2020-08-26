@@ -8,12 +8,12 @@ var selected_authors = [];
 var hl_journal_id = null;
 var hl_pinned = false;
 var selected_entity = [];
-d3.json("/journal", function(error, data) {
+d3.json("/journal", function (error, data) {
   journal = data;
   // drawJournalList();
 });
 
-d3.json("/test", function(error, data) {
+d3.json("/test", function (error, data) {
   console.log(data);
 });
 // draw the journal select list
@@ -65,35 +65,35 @@ function drawSelectedJournals() {
 
 // perform some sort of visual feedback on journal identities
 function highlightJournal() {
-  $(".filter-item").on("mouseover", function() {
-    if (hl_pinned) return;
-    hl_journal_id = $(this).attr("journal-id");
-    update(filter_data);
-  });
+  // $(".filter-item").on("mouseover", function () {
+  //   if (hl_pinned) return;
+  //   hl_journal_id = $(this).attr("journal-id");
+  //   update(filter_data);
+  // });
 
-  $(".filter-item").on("mouseout", function() {
-    if (hl_pinned) return;
-    hl_journal_id = null;
-    update(filter_data);
-  });
+  // $(".filter-item").on("mouseout", function () {
+  //   if (hl_pinned) return;
+  //   hl_journal_id = null;
+  //   update(filter_data);
+  // });
 
-  $(".filter-item").on("click", function() {
-    if ($(this).attr("journal-id") == hl_journal_id && hl_pinned) {
-      $(".filter-item").removeClass("pinned");
-      $(".filter-item").css("background-color", "");
-      hl_pinned = false;
-      hl_journal_id = null;
-    } else {
-      $(this).addClass("pinned");
-      $(this).css(
-        "background-color",
-        $(".filter-legend", this).css("background-color")
-      );
-      hl_pinned = true;
-      hl_journal_id = $(this).attr("journal-id");
-    }
-    update(filter_data);
-  });
+  // $(".filter-item").on("click", function () {
+  //   if ($(this).attr("journal-id") == hl_journal_id && hl_pinned) {
+  //     $(".filter-item").removeClass("pinned");
+  //     $(".filter-item").css("background-color", "");
+  //     hl_pinned = false;
+  //     hl_journal_id = null;
+  //   } else {
+  //     $(this).addClass("pinned");
+  //     $(this).css(
+  //       "background-color",
+  //       $(".filter-legend", this).css("background-color")
+  //     );
+  //     hl_pinned = true;
+  //     hl_journal_id = $(this).attr("journal-id");
+  //   }
+  //   update(filter_data);
+  // });
 }
 
 // remove from selected journal list
@@ -102,7 +102,7 @@ function removeJournalFilter(elem) {
   var journal_id = $parent.attr("journal-id");
   $parent.remove();
 
-  selected_journals = selected_journals.filter(function(item) {
+  selected_journals = selected_journals.filter(function (item) {
     return item != journal_id;
   });
   applyFilters(true);
@@ -122,12 +122,12 @@ function filterJournals(data, queued) {
     $("#journal-filter i").hide();
     $("#filter-list h2.journal").html(
       "Selected Journals (" +
-        selected_journals.length +
-        ") <a onclick='clearJournalFilters();'>clear</a>"
+      selected_journals.length +
+      ") <a onclick='clearJournalFilters();'>clear</a>"
     );
   }
   var entity_list = [];
-  var documents = $.grep(data.documents, function(n, i) {
+  var documents = $.grep(data.documents, function (n, i) {
     if ($.inArray(n.journalid + "", selected_journals) > -1) {
       if ($.inArray(n.entityid + "", entity_list) == -1) {
         entity_list.push(n.entityid);
@@ -170,6 +170,9 @@ function applyFilters(update_selected) {
     drawSelectedAuthors();
   }
   // update our vis
+  links = checkForDuplicates(filter_data.documents);
+  thumbList = links.map(v => v.toString())
+  // buildKeyMap(links);
   update(filter_data);
 }
 
@@ -200,7 +203,7 @@ function removeAuthorFilter(elem) {
   var author_id = $parent.attr("author-id");
   $parent.remove();
 
-  selected_authors = selected_authors.filter(function(item) {
+  selected_authors = selected_authors.filter(function (item) {
     return item != author_id;
   });
 
@@ -221,12 +224,12 @@ function filterAuthors(data, queued) {
     $("#author-filter i").hide();
     $("#filter-list h2.author").html(
       "Selected Authors (" +
-        selected_authors.length +
-        ") <a onclick='clearAuthorFilters();'>clear</a>"
+      selected_authors.length +
+      ") <a onclick='clearAuthorFilters();'>clear</a>"
     );
   }
   var entity_list = [];
-  var documents = $.grep(data.documents, function(n, i) {
+  var documents = $.grep(data.documents, function (n, i) {
     if ($.inArray(n.authorid + "", selected_authors) > -1) {
       if ($.inArray(n.entityid + "", entity_list) == -1) {
         entity_list.push(n.entityid);
@@ -376,10 +379,10 @@ function extractDateRange(documents) {
   }
   populateSetSizeRange(minSet, maxSet);
   populateDateRange(min_year, max_year);
-  $("#filter-set-size")[0].noUiSlider.on("update", function() {
+  $("#filter-set-size")[0].noUiSlider.on("update", function () {
     applyFilters(false);
   });
-  $("select[name='start-year'], select[name='end-year']").change(function() {
+  $("select[name='start-year'], select[name='end-year']").change(function () {
     applyFilters(false);
   });
 }
@@ -408,7 +411,7 @@ function populateDateRange(min, max) {
     },
     tooltips: [wNumb({ decimals: 0 }), wNumb({ decimals: 0 })]
   });
-  $("#filter-date")[0].noUiSlider.on("update", function() {
+  $("#filter-date")[0].noUiSlider.on("update", function () {
     applyFilters(false);
   });
 }
@@ -417,7 +420,7 @@ function filterSetSize(data, queued) {
   var minSet = parseInt(values[0]);
   var maxSet = parseInt(values[1]);
   entity_list = [];
-  var documents = data.documents.filter(function(n) {
+  var documents = data.documents.filter(function (n) {
     if (n.links.length >= minSet && n.links.length <= maxSet) {
       if ($.inArray(n.entityid, entity_list) == -1) {
         entity_list.push(n.entityid);
@@ -437,7 +440,7 @@ function filterDate(data, queued) {
   var min_year = parseInt(values[0]);
   var max_year = parseInt(values[1]);
   var entity_list = [];
-  var documents = data.documents.filter(function(n) {
+  var documents = data.documents.filter(function (n) {
     if (n.year >= min_year && n.year <= max_year) {
       if ($.inArray(n.entityid, entity_list) == -1) {
         entity_list.push(n.entityid);
@@ -461,7 +464,7 @@ function filterTitle(data, queued) {
     .val()
     .toLowerCase();
   var entity_list = [];
-  var documents = data.documents.filter(function(n) {
+  var documents = data.documents.filter(function (n) {
     if (n.title.toLowerCase().indexOf(keyword) != -1) {
       if ($.inArray(n.entityid, entity_list) == -1) {
         entity_list.push(n.entityid);

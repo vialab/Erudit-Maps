@@ -24,35 +24,10 @@ After successfully installing you should be able to run the NodeJS server with t
 npm start
 ```
 
-### Debugging
-
-Several GulpJS functions have been pre-made in order to optimize the workflow. 
-
-Here is a list of available tasks:
-
-* `gulp vendor` - Copy third-party libraries from node_modules to client folder
-* `gulp js` - Concatenate and minify javascript files
-* `gulp css` - Compile SASS, concatenate and minify CSS
-* `gulp dev` - Run `js`, `css` task and sync files to browser to automatically detect saved changes
-* `gulp` - Run `vendor`, `js`, and `css` tasks
-
 ## Deployment
 
 Deployment for this project has been automated, and so please be aware that pushes to this repository will automatically build, run, and deploy to the VIALAB production servers at https://collabmap.vialab.ca/. 
 
-## Built With
-
-* [NPM](https://www.npmjs.com/) - Package Manager
-* [NodeJS](https://nodejs.org/en/) - The web framework / packaging system used
-* [SASS](https://gulpjs.com/) - CSS Extension
-* [GulpJS](https://gulpjs.com/) - Workflow automation tool
-* [Bootstrap](https://getbootstrap.com/) - Front-end component library
-* [D3](https://d3js.org/) - Visualization Library
-* [Docker](https://www.docker.com/) - Container / Dependency management
-
-## Versioning
-
-This project is being developed using an iterative approach. Therefore, now releases have yet been made and the project will be subject to drastic changes. No versioning practices will be followed until release. To see a history of changes made to this project, see [commit history](https://github.com/vialab/Erudit-Maps/commits/).
 
 ## Authors
 

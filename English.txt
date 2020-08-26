@@ -1,0 +1,27 @@
+Erudit Maps
+SORRY! No documents are available for viewing at this time.
+Processing
+idle
+Idle
+clear
+Clear
+Selected Journals
+None selected
+Selected Authors
+Year Range
+Show more filters +
+Title Filter
+Set Size Filter
+Journals
+Select Journals
+Authors
+Select Authors
+Show less -
+About
+Contact Us
+Developer
+Project
+Textension
+Document Analyzer
+This project explores the entities found in the Erudit corpus, and was funded by the Open Social Sciences and Humanities
+grant.

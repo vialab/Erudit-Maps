@@ -7,9 +7,9 @@ class RenderBuffer {
   }
 
   switchFrontBuffer() {
-    console.log(this.currentBuffer);
+    // console.log(this.currentBuffer);
     this.currentBuffer = Number(!Boolean(this.currentBuffer));
-    console.log(this.currentBuffer);
+    // console.log(this.currentBuffer);
   }
 
   clearBackBuffer() {
@@ -26,7 +26,6 @@ class RenderBuffer {
   getFrontBuffer() {
     return this.buffers[this.currentBuffer];
   }
-
   buffers = [];
   currentBuffer = 0;
 }
@@ -46,7 +45,7 @@ class JobTaskSystem {
     for (var i = 0; i < tmpValues.length; i++) {
       this.workerBackLog[tmpValues[i]] = [];
     }
-    console.log(this.workerBackLog);
+    // console.log(this.workerBackLog);
   }
 
   initWorkers() {
@@ -85,6 +84,7 @@ class JobTaskSystem {
       this.currentWork = typeOfWork;
       document.getElementById("computeProgressBar").style = "width:" + 0 + "%;";
       document.getElementById("computeProgressBar").innerHTML = "Processing";
+      // for (var i = 0; i < 4; i++) {
       for (var i = 0; i < navigator.hardwareConcurrency; i++) {
         this.sendWork(data, i);
       }
@@ -102,7 +102,7 @@ class JobTaskSystem {
     if (this.availableWorkers.size == 0) {
       this.available = true;
       this.typeOfWork = null;
-      delete e.data.worker_id;
+      // delete e.data.worker_id;
       this.callback(e);
       this.onFinishedCallback();
       document.getElementById("computeProgressBar").innerHTML = "Idle";
@@ -117,7 +117,6 @@ class JobTaskSystem {
   }
 
   sendWork(data, worker_id) {
-    console.log("sending work");
     this.availableWorkers.set(worker_id, worker_id);
     this.available = false;
     data.thread_id = worker_id;
@@ -125,11 +124,11 @@ class JobTaskSystem {
   }
 
   terminateWorkers() {
-    console.log("terminated");
+    // console.log("terminated");
     for (var i = 0; i < navigator.hardwareConcurrency; i++) {
       this.workers[i].terminate();
     }
-    console.log(this.workers);
+    // console.log(this.workers);
     this.availableWorkers.clear();
     this.available = true;
   }
@@ -140,8 +139,8 @@ class JobTaskSystem {
     this.callback = callback;
   }
 
-  callback = function(e) {};
-  onFinishedCallback = function() {};
+  callback = function (e) { };
+  onFinishedCallback = function () { };
   available = true;
   workers = [];
   worker_ids = [];

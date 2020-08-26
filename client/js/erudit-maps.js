@@ -142,32 +142,40 @@ var map = new google.maps.Map(d3.select("#map").node(), {
 var overlays = [];
 var map_data;
 var filter_data;
+// var colors = [
+//   "#e07b91",
+//   "#d33f6a",
+//   "#11c638",
+//   "#8dd593",
+//   "#c6dec7",
+//   "#ead3c6",
+//   "#f0b98d",
+//   "#ef9708",
+//   "#0fcfc0",
+//   "#9cded6",
+//   "#d5eae7",
+//   "#f3e1eb",
+//   "#f6c4e1",
+//   "#f79cd4",
+//   "#023fa5",
+//   "#7d87b9",
+//   "#bec1d4",
+//   "#d6bcc0",
+//   "#bb7784",
+//   "#8e063b",
+//   "#4a6fe3",
+//   "#8595e1",
+//   "#b5bbe3",
+//   "#e6afb9"
+// ];
 var colors = [
-  "#e07b91",
-  "#d33f6a",
-  "#11c638",
-  "#8dd593",
-  "#c6dec7",
-  "#ead3c6",
-  "#f0b98d",
-  "#ef9708",
-  "#0fcfc0",
-  "#9cded6",
-  "#d5eae7",
-  "#f3e1eb",
-  "#f6c4e1",
-  "#f79cd4",
-  "#023fa5",
-  "#7d87b9",
-  "#bec1d4",
   "#d6bcc0",
-  "#bb7784",
-  "#8e063b",
-  "#4a6fe3",
-  "#8595e1",
-  "#b5bbe3",
-  "#e6afb9"
-];
+  // "#F8F8FA",
+  "#C1B4A1",
+  "#D8434C",
+  "#B49EA0",
+  "#324869"
+]
 var color_scale = d3.scale.ordinal().range(colors);
 var renderBuffer = new RenderBuffer();
 var jobSystem = new JobTaskSystem();
@@ -191,9 +199,11 @@ var quadTree;
 //function callbacks based on if the map is loaded or not
 var updateDataFunction = updateData;
 //do nothing until map is loaded
-var updateMapFunction = function(data) {};
+var updateMapFunction = function (data) { };
 //map listener used once for loading
 var loadListener;
+
+
 //On webpage load
 //This should init the google maps overlay and request the api
 //this should also bind all of the overlay functions
@@ -201,16 +211,18 @@ function onLoad() {
   loadListener = map.addListener("tilesloaded", () => {
     //updateDataFunction = updateData;
     updateMapFunction = updateMap;
+
     overlay.draw = drawOverlay;
-    console.log("tilesloaded");
     links = checkForDuplicates(myData.documents);
     buildKeyMap(links);
-    update(myData);
     google.maps.event.removeListener(loadListener);
     map.addListener("zoom_changed", onZoom);
+
+    initThumbnails() // Init thumbnail manager
   });
+
   overlay = new google.maps.OverlayView();
-  overlay.onAdd = function() {
+  overlay.onAdd = function () {
     overlay.layer = d3
       .select(overlay.getPanes().overlayMouseTarget)
       .append("div")
@@ -223,13 +235,14 @@ function onLoad() {
     svg = layer.append("svg");
     adminDivisions = svg.append("g").attr("class", "AdminDivisions");
     projection = this.getProjection();
-    overlay.draw = function() {};
+    overlay.draw = function () { };
     // Bind our overlay to the map
-    overlay.onRemove = function() {
+    overlay.onRemove = function () {
       this.layer.remove();
     };
-    console.log("onAdd finished");
+    // console.log("onAdd finished");
   };
+
   overlay.setMap(map);
 }
 
@@ -238,8 +251,9 @@ function update(data) {
   updateDataFunction(data);
   updateMapFunction(data);
 }
+
 //updates the map based on the data received. This function is called once the map tiles have finished loading on the page.
-function updateMap(data) {
+function updateMap(data, skipWork) {
   overlay.layer.selectAll("svg").remove();
   var marker = overlay.layer
     .selectAll("svg")
@@ -249,13 +263,13 @@ function updateMap(data) {
     .append("svg")
     .each(transform)
     .attr("class", "marker")
-    .attr("doc-id", function(d) {
+    .attr("doc-id", function (d) {
       return d.entityid;
     })
-    .attr("journal-id", function(d) {
+    .attr("journal-id", function (d) {
       return d.entityid;
     })
-    .on("mouseover", function(d) {
+    .on("mouseover", function (d) {
       d3.select(this)
         .selectAll("circle")
         .attr("r", 9)
@@ -276,7 +290,7 @@ function updateMap(data) {
       setsToRender.push(keys);
       renderRequestedSets();
     })
-    .on("mouseout", function(d) {
+    .on("mouseout", function (d) {
       d3.select(this)
         .selectAll("circle")
         .attr("r", 4.5)
@@ -296,7 +310,7 @@ function updateMap(data) {
       }
       renderAppliedFilter();
     })
-    .on("click", function(d) {
+    .on("click", function (d) {
       openDocumentsBar(d.entityid, d.affiliation);
     });
 
@@ -306,10 +320,10 @@ function updateMap(data) {
     .attr("r", 4.5)
     .attr("cx", padding)
     .attr("cy", padding)
-    .attr("fill", function(d) {
+    .attr("fill", function (d) {
       return rgb_highlight(d.entityid);
     })
-    .attr("stroke", function(d) {
+    .attr("stroke", function (d) {
       if (rgb_highlight(d.entityid) != rgb_default) {
         return "#000";
       } else {
@@ -320,55 +334,63 @@ function updateMap(data) {
   $("svg circle").tipsy({
     gravity: "w",
     html: true,
-    title: function() {
+    title: function () {
       var d = this.__data__;
       return d.affiliation;
     }
   });
 
-  $("svg circle").mousemove(function(event) {
+  $("svg circle").mousemove(function (event) {
     $(".tipsy").css("left", event.pageX + 16 + "px");
     $(".tipsy").css("top", event.pageY - 16 + "px");
   });
 
   var entities = Object.values(data.entities);
   filters = [];
+  // let old_links = links
   links = checkForDuplicates(myData.documents);
   buildKeyMap(links);
-  console.time("async");
+  // console.time("async");
   for (var i = 0; i < entities.length; i++) {
     //NodeSet.push([entities[i].lat, entities[i].lng]);
     filters.push(entities[i].entityid);
   }
-  doWork(myData.entities, links, 1 << map.getZoom(), work.NEW_DATA);
+  if (!skipWork) {
+    // links = checkForDuplicates(filter_data.documents)
+    if (filter_data.documents.length > 0) {
+      doWork(filter_data.entities, links, 1 << map.getZoom(), work.NEW_DATA);
+    }
+  }
 }
 //create quad tree of data used to calculate the neighbours for the bubbleSet later.
-function createQuadTree(entities) {
-  var data = [];
-  for (var i = 0; i < entities.length; i++) {
-    let tmp = projection.fromLatLngToContainerPixel(
-      new google.maps.LatLng(entities[i].lat, entities[i].lng)
-    );
-    data.push({ id: entities[i].entityid, x: tmp.x, y: tmp.y });
-  }
-  quadtree = d3
-    .quadtree()
-    .x(d => {
-      return d.x;
-    })
-    .y(d => {
-      return d.y;
-    })
-    .addAll(data);
-}
+// function createQuadTree(entities) {
+//   var data = [];
+//   for (var i = 0; i < entities.length; i++) {
+//     let tmp = projection.fromLatLngToContainerPixel(
+//       new google.maps.LatLng(entities[i].lat, entities[i].lng)
+//     );
+//     data.push({ id: entities[i].entityid, x: tmp.x, y: tmp.y });
+//   }
+//   quadtree = d3
+//     .quadtree()
+//     .x(d => {
+//       return d.x;
+//     })
+//     .y(d => {
+//       return d.y;
+//     })
+//     .addAll(data);
+// }
 //aggregate all of the data being pushed before we are able to process
-function updateDataBeforeMapLoad(data) {
-  myData = { ...myData, ...data };
-}
+// function updateDataBeforeMapLoad(data) {
+//   myData = { ...myData, ...data };
+// }
+
 //regular update data function when the map is loaded
 function updateData(data) {
   myData = data;
 }
+
 //builds key map that is used for the onHover only display the sets relative to this node
 function buildKeyMap(links) {
   keyMap.clear();
@@ -383,10 +405,12 @@ function buildKeyMap(links) {
     }
   }
 }
+
 function onZoom() {
-  console.log("zoom");
-  console.log(myData.entities);
-  doWork(myData.entities, links, 1 << map.getZoom(), work.ZOOM);
+  // console.log("zoom");
+  // console.log(myData.entities);
+  links = checkForDuplicates(filter_data.documents)
+  doWork(filter_data.entities, links, 1 << map.getZoom(), work.ZOOM);
 }
 
 function checkForDuplicates(data) {
@@ -414,6 +438,8 @@ function checkForDuplicates(data) {
 }
 
 async function doWork(entities, links, zoom, work) {
+  // clearThumbnails()
+  resetThumbnails()
   jobSystem.setCallBack(onMessage);
   jobSystem.setOnFinishedCallback(render);
   jobSystem.queueWork(work, {
@@ -425,27 +451,35 @@ async function doWork(entities, links, zoom, work) {
 
 function onMessage(event) {
   event.data.polyLines.forEach((value, key) => {
-    tmp = [];
-    value.forEach(d => {
-      let coords = map
-        .getProjection()
-        .fromPointToLatLng(
-          new google.maps.Point(d[0] / event.data.zoom, d[1] / event.data.zoom)
-        );
-      tmp.push({ lat: coords.lat(), lng: coords.lng() });
-    });
-    renderBuffer.getBackBuffer().set(
-      key,
-      new google.maps.Polygon({
-        path: tmp,
-        strokeColor: "#000000",
-        strokeOpacity: 0.5,
-        strokeWeight: bubbleSetOutlineThickness,
-        fillColor: color_scale(Math.random(0, 100) % 23),
-        fillOpacity: bubbleSetOpacity,
-        geodesic: false
-      })
-    );
+    const backBuf = renderBuffer.getBackBuffer()
+    if (!backBuf.get(key)) {
+      let tmp = [];
+      value[0].forEach(d => {
+        let coords = map
+          .getProjection()
+          .fromPointToLatLng(
+            new google.maps.Point(d[0] / event.data.zoom, d[1] / event.data.zoom)
+          );
+        tmp.push({ lat: coords.lat(), lng: coords.lng() });
+      });
+      // let colour = color_scale(Math.random(0, 100) % 23)
+      let colour = color_scale(key)
+      addThumbnail(key, tmp, colour)
+      // console.log("worker done: ", event.data.worker_id, key, value.length, value[0].length)
+      backBuf.set(
+        key,
+        new google.maps.Polygon({
+          path: tmp,
+          strokeColor: "#000000",
+          strokeOpacity: 0.5,
+          strokeWeight: bubbleSetOutlineThickness,
+          fillColor: colour,
+          fillOpacity: bubbleSetOpacity,
+          geodesic: false
+        })
+      );
+    }
+
   });
 }
 
@@ -482,11 +516,14 @@ function renderRequestedSets() {
 
 function render() {
   renderBuffer.switchFrontBuffer();
+
   renderBuffer.clearBackBuffer();
   renderBuffer.getFrontBuffer().forEach((value, key) => {
     value.setMap(map);
   });
-  console.timeEnd("async");
+  // console.timeEnd("async");
+  applyThumbnailFilters()
+  drawThumbnails()
 }
 
 //transforms markers from lat,lng to pixels based on the maps projection
@@ -502,65 +539,67 @@ function transform(d) {
 }
 
 //gets the lat, lng based on entityID in object format [{lat:,lng:}]
-function getCoords(links) {
-  var coords = [];
-  for (var i = 0; i < links.length; i++) {
-    coords.push({
-      lat: node_coord[links[i]][0],
-      lng: node_coord[links[i]][1]
-    });
-  }
-  return coords;
-}
+// function getCoords(links) {
+//   var coords = [];
+//   for (var i = 0; i < links.length; i++) {
+//     coords.push({
+//       lat: node_coord[links[i]][0],
+//       lng: node_coord[links[i]][1]
+//     });
+//   }
+//   return coords;
+// }
+
 //draws between the nodes in an arch
-function drawLineNodes(data, i, coords) {
-  if (data.documents[i].links.length < 3) {
-    var polyline = new google.maps.Polygon({
-      path: coords,
-      geodesic: true,
-      strokeColor: rgb_highlight(data.documents[i].entityid),
-      strokeOpacity: 0.8,
-      strokeWeight: 1
-    });
-    polylines.push(polyline);
-  } else {
-    var polygon = new google.maps.Polygon({
-      paths: coords,
-      strokeColor: rgb_highlight(data.documents[i].entityid),
-      strokeOpacity: 0.5,
-      strokeWeight: 1.5,
-      fillColor: rgb_highlight(data.documents[i].entityid),
-      fillOpacity: 0.1
-    });
-    polygons.push(polygon);
-  }
-}
+// function drawLineNodes(data, i, coords) {
+//   if (data.documents[i].links.length < 3) {
+//     var polyline = new google.maps.Polygon({
+//       path: coords,
+//       geodesic: true,
+//       strokeColor: rgb_highlight(data.documents[i].entityid),
+//       strokeOpacity: 0.8,
+//       strokeWeight: 1
+//     });
+//     polylines.push(polyline);
+//   } else {
+//     var polygon = new google.maps.Polygon({
+//       paths: coords,
+//       strokeColor: rgb_highlight(data.documents[i].entityid),
+//       strokeOpacity: 0.5,
+//       strokeWeight: 1.5,
+//       fillColor: rgb_highlight(data.documents[i].entityid),
+//       fillOpacity: 0.1
+//     });
+//     polygons.push(polygon);
+//   }
+// }
 //draws a line between the nodes in a straight line
-function drawLineNodesStraight(data, i) {
-  var coords = getGoogleCoords(data.documents[i].links);
-  if (data.documents[i].links.length < 3) {
-    var polyline = new google.maps.Polygon({
-      path: coords,
-      geodesic: true,
-      strokeColor: rgb_highlight(data.documents[i].entityid),
-      strokeOpacity: 0.8,
-      strokeWeight: 1
-    });
-    polylines.push(polyline);
-  } else {
-    var polygon = new google.maps.Polygon({
-      paths: coords,
-      strokeColor: rgb_highlight(data.documents[i].entityid),
-      strokeOpacity: 0.5,
-      strokeWeight: 1.5,
-      fillColor: rgb_highlight(data.documents[i].entityid),
-      fillOpacity: 0.1
-    });
-    polygons.push(polygon);
-  }
-}
+// function drawLineNodesStraight(data, i) {
+//   var coords = getGoogleCoords(data.documents[i].links);
+//   if (data.documents[i].links.length < 3) {
+//     var polyline = new google.maps.Polygon({
+//       path: coords,
+//       geodesic: true,
+//       strokeColor: rgb_highlight(data.documents[i].entityid),
+//       strokeOpacity: 0.8,
+//       strokeWeight: 1
+//     });
+//     polylines.push(polyline);
+//   } else {
+//     var polygon = new google.maps.Polygon({
+//       paths: coords,
+//       strokeColor: rgb_highlight(data.documents[i].entityid),
+//       strokeOpacity: 0.5,
+//       strokeWeight: 1.5,
+//       fillColor: rgb_highlight(data.documents[i].entityid),
+//       fillOpacity: 0.1
+//     });
+//     polygons.push(polygon);
+//   }
+// }
 
 //draw functions for map -- might not have to clear overlays we will see
+
 function drawOverlay() {
   //clearOverlays();
   //layer.selectAll("svg").each(transform);
@@ -569,6 +608,7 @@ function drawOverlay() {
     .data(d3.values(myData.entities))
     .each(transform);
 }
+
 //defines 5 points between to geo-location which is used to create a straight line
 function getGoogleCoords(links) {
   var geo_data = [];
@@ -644,37 +684,37 @@ function transformToGeoFeature(d) {
 }
 
 // draw a widget box displaying info regarding a node
-function pushInfoWidget(d) {
-  if ($("#winfo-" + d.entityid).length > 0) {
-    return false;
-  }
-  var html =
-    "<div class='tool-box-widget' id='winfo-" +
-    d.entityid +
-    "'>\
-    <span class='widget-close' onclick='$(this).parent().remove();'>x</span>" +
-    "<h2>" +
-    d.affiliation +
-    "</h2>" +
-    "<p>Address: " +
-    d.addr +
-    "<br/>" +
-    "Lat: " +
-    d.lat +
-    "<br/>" +
-    "Lng: " +
-    d.lng +
-    "<br/>" +
-    "<button class='ui button' onclick='openDocumentsBar(" +
-    d.entityid +
-    ',"' +
-    d.affiliation +
-    "\")'>View Documents</button></div>";
+// function pushInfoWidget(d) {
+//   if ($("#winfo-" + d.entityid).length > 0) {
+//     return false;
+//   }
+//   var html =
+//     "<div class='tool-box-widget' id='winfo-" +
+//     d.entityid +
+//     "'>\
+//     <span class='widget-close' onclick='$(this).parent().remove();'>x</span>" +
+//     "<h2>" +
+//     d.affiliation +
+//     "</h2>" +
+//     "<p>Address: " +
+//     d.addr +
+//     "<br/>" +
+//     "Lat: " +
+//     d.lat +
+//     "<br/>" +
+//     "Lng: " +
+//     d.lng +
+//     "<br/>" +
+//     "<button class='ui button' onclick='openDocumentsBar(" +
+//     d.entityid +
+//     ',"' +
+//     d.affiliation +
+//     "\")'>View Documents</button></div>";
 
-  $("#tool-box").append(html);
-  openSideBar();
-  return true;
-}
+//   $("#tool-box").append(html);
+//   openSideBar();
+//   return true;
+// }
 
 // open a modal to allow viewing of documents and filtration by author
 function openDocumentsBar(entity_id, affiliation) {
@@ -719,7 +759,7 @@ function openFilterModal() {
 
 // get all filtered documents in a specific journal
 function getDocumentsByEntity(entity_id) {
-  return $.grep(filter_data.documents, function(n, i) {
+  return $.grep(filter_data.documents, function (n, i) {
     if (n.entityid == entity_id || $.inArray(entity_id, n.links)) return true;
     return false;
   });
@@ -816,13 +856,14 @@ function hideLinks(node_id) {
   }
 }
 
-$(document).ready(function() {
+
+$(document).ready(function () {
   $("#tool-box").width($(window).width() * 0.2);
-  $("#filter-title").on("input", function() {
+  $("#filter-title").on("input", function () {
     applyFilters(false);
   });
   // Load the station data. When the data comes back, create an overlay.
-  d3.json("/entities", function(error, data) {
+  d3.json("/entities", function (error, data) {
     if (error) throw error;
     map_data = data;
     filter_data = map_data;
@@ -831,6 +872,7 @@ $(document).ready(function() {
     extractJournalEntity(map_data.documents);
     author_data = extractAuthorList(map_data.documents);
     drawAuthorList();
-    applyFilters(false);
+    applyFilters(true);
+    update({ entities: [], documents: [] })
   });
 });
