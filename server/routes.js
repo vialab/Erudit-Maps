@@ -34,7 +34,7 @@ module.exports = app => {
       username: "chriscollins",
       password: "AKIAQKHU4SOSFAWG7UQP"
     };
-    request.post("https://runtime.dimensions.ai/api/dsl.json", login, function(
+    request.post("https://runtime.dimensions.ai/api/dsl.json", login, function (
       error,
       resp,
       body
