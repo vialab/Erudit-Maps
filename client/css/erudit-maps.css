@@ -437,8 +437,12 @@ footer ul li a:hover, footer ul li a:focus, footer ul li a:active, footer ul li 
 }
 
 #map {
-  width: 100vw;
-  height: 100vh;
+  /* width: 100vw; */
+  /* width: #calc(100vw - (100vw - 100%)); */
+  /* box-sizing: border-box; */
+  position: relative;
+  overflow: hidden;
+  height: 65vh;
 }
 
 .transition {
