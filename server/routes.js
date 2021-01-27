@@ -1,4 +1,4 @@
-const request = require("request");
+const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
 const data = require("./entities.json");
 const journal_data = require("./journal.json");
@@ -30,19 +30,16 @@ module.exports = app => {
   });
 
   app.get("/test", (req, resp) => {
-    login = {
-      username: "chriscollins",
-      password: "AKIAQKHU4SOSFAWG7UQP"
-    };
-    request.post("https://runtime.dimensions.ai/api/dsl.json", login, function (
-      error,
-      resp,
-      body
-    ) {
-      if (error) {
-        throw error;
+    login = { key: "0C3C6735217A4B159E0FA5CA270A65B6" };
+
+    fetch('https://app.dimensions.ai/api/auth.json', {
+      method: "POST",
+      body: JSON.stringify(login),
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "python-requests/2.23.0"
       }
-      console.log(resp.toJSON());
-    });
+    }).then(res => res.json())
+      .catch(error => console.error('Error:', error));
   });
 };
