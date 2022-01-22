@@ -23,7 +23,7 @@
     "i18n": "^0.11.1",
     "jquery": "^3.5.1",
     "jquery.easing": "^1.4.1",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.1.1",
     "pg": "^7.18.2",
     "semantic-ui-css": "^2.4.1",
     "simple-line-icons": "2.4.1"
